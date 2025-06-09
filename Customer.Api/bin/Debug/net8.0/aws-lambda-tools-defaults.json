@@ -1,0 +1,11 @@
+{
+  "Information": [
+    "Test123"
+  ],
+  "profile": "",
+  "region": "us-east-1",
+  "configuration": "Release",
+  "s3-prefix": "Customer.Api/",
+  "template": "serverless.template",
+  "template-parameters": ""
+}
