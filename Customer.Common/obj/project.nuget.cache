@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vfT9olbvIHq1s5qaw+H9TRejHAt8sVB64ReFEvy2btw2QruD3UY+qq+xj0fw/kRogCJ6Az5GEEBdaW9trG9q2A==",
+  "dgSpecHash": "wTUp9P1M6TjvPX0jYZtvrOAZTA60j9G/6nSq/7gn8i1+Az8jaqriljueZ6/OFmWOu8i44qv4JfZwnthUqtHoww==",
   "success": true,
-  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj",
+  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj",
   "expectedPackageFiles": [
     "/Users/yashshah/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512"
   ],

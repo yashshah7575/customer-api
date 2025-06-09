@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "8O+RaKqNhE5eGMS9HxN402y3plqGJtF81lWz3KqjjYqJnv/bmSf2vPnpJEbwBZ7GrcKmPljtFNatujCTF0IOiw==",
+  "dgSpecHash": "blY91Xx1LvsUN8KwmkQX6thx7retvOmorsnoruKBZFsRGBOCbNvjRyppdGQ9MS43RRMHdN3cyumeQge+WJYKCw==",
   "success": true,
-  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Api/Customer.Api.csproj",
+  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Api/Customer.Api.csproj",
   "expectedPackageFiles": [
     "/Users/yashshah/.nuget/packages/amazon.lambda.apigatewayevents/2.7.1/amazon.lambda.apigatewayevents.2.7.1.nupkg.sha512",
     "/Users/yashshah/.nuget/packages/amazon.lambda.applicationloadbalancerevents/2.2.0/amazon.lambda.applicationloadbalancerevents.2.2.0.nupkg.sha512",

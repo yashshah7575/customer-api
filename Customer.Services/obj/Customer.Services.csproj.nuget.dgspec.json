@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj": {}
+    "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj": {}
   },
   "projects": {
-    "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj": {
+    "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj",
+        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj",
         "projectName": "Customer.Common",
-        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj",
+        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj",
         "packagesPath": "/Users/yashshah/.nuget/packages/",
-        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/obj/",
+        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/yashshah/.nuget/NuGet/NuGet.Config"
@@ -64,14 +64,14 @@
         }
       }
     },
-    "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj": {
+    "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj",
+        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj",
         "projectName": "Customer.Repository",
-        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj",
+        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj",
         "packagesPath": "/Users/yashshah/.nuget/packages/",
-        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/obj/",
+        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/yashshah/.nuget/NuGet/NuGet.Config"
@@ -87,8 +87,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj": {
-                "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj"
+              "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj": {
+                "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj"
               }
             }
           }
@@ -103,6 +103,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "Microsoft.EntityFrameworkCore.InMemory": {
               "target": "Package",
               "version": "[8.0.0, )"
@@ -132,14 +136,14 @@
         }
       }
     },
-    "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj": {
+    "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj",
+        "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj",
         "projectName": "Customer.Services",
-        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj",
+        "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj",
         "packagesPath": "/Users/yashshah/.nuget/packages/",
-        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/obj/",
+        "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/yashshah/.nuget/NuGet/NuGet.Config"
@@ -155,8 +159,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj": {
-                "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj"
+              "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj": {
+                "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj"
               }
             }
           }

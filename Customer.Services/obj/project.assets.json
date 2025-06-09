@@ -422,6 +422,7 @@
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
           "Customer.Common": "1.0.0",
+          "Microsoft.EntityFrameworkCore": "8.0.0",
           "Microsoft.EntityFrameworkCore.InMemory": "8.0.0",
           "Newtonsoft.Json": "13.0.3"
         },
@@ -1508,11 +1509,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj",
+      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj",
       "projectName": "Customer.Services",
-      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj",
+      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj",
       "packagesPath": "/Users/yashshah/.nuget/packages/",
-      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/obj/",
+      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/yashshah/.nuget/NuGet/NuGet.Config"
@@ -1528,8 +1529,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj": {
-              "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj"
+            "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj": {
+              "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj"
             }
           }
         }

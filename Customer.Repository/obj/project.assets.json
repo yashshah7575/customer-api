@@ -646,6 +646,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Customer.Common >= 1.0.0",
+      "Microsoft.EntityFrameworkCore >= 8.0.0",
       "Microsoft.EntityFrameworkCore.InMemory >= 8.0.0",
       "Newtonsoft.Json >= 13.0.3"
     ]
@@ -656,11 +657,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj",
+      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj",
       "projectName": "Customer.Repository",
-      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/Customer.Repository.csproj",
+      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/Customer.Repository.csproj",
       "packagesPath": "/Users/yashshah/.nuget/packages/",
-      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Repository/obj/",
+      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Repository/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/yashshah/.nuget/NuGet/NuGet.Config"
@@ -676,8 +677,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj": {
-              "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj"
+            "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj": {
+              "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj"
             }
           }
         }
@@ -692,6 +693,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "Microsoft.EntityFrameworkCore": {
+            "target": "Package",
+            "version": "[8.0.0, )"
+          },
           "Microsoft.EntityFrameworkCore.InMemory": {
             "target": "Package",
             "version": "[8.0.0, )"

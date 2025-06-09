@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HPbDeO3hmo6KU2IfwiKzbcMj2trm/+WSjbD/CtZf2SjvvaKoegoiPONs7lFrk9LeJtB/FNuFfbxU9XtZ8RI4OQ==",
+  "dgSpecHash": "fRxldtXMv6WLdlLYNho8fxIv0k/JKFgbYbxQtl4KRYeB6aKybGTdyVopDKC2s32e/uLBSQBlhNtxinQ1ReZN5w==",
   "success": true,
-  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Services/Customer.Services.csproj",
+  "projectFilePath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Services/Customer.Services.csproj",
   "expectedPackageFiles": [
     "/Users/yashshah/.nuget/packages/automapper/8.0.0/automapper.8.0.0.nupkg.sha512",
     "/Users/yashshah/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/6.0.0/automapper.extensions.microsoft.dependencyinjection.6.0.0.nupkg.sha512",

@@ -60,11 +60,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj",
+      "projectUniqueName": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj",
       "projectName": "Customer.Common",
-      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/Customer.Common.csproj",
+      "projectPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/Customer.Common.csproj",
       "packagesPath": "/Users/yashshah/.nuget/packages/",
-      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api/Customer.Common/obj/",
+      "outputPath": "/Users/yashshah/Documents/GitHub/customer-api-playground/Customer.Common/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/yashshah/.nuget/NuGet/NuGet.Config"
