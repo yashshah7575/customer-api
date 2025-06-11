@@ -1,10 +1,11 @@
-﻿//using AutoMapper;
-//using Customer.Repository;
+﻿using AutoMapper;
+using Customer.Common.Models.Customer;
+using Customer.Repository;
 
-//public class CustomerMappingProfile : Profile
-//{
-//    public CustomerMappingProfile()
-//    {
-//        CreateMap<CustomerEntity, Customer.Common.Models.Customer.Customer>().ReverseMap();
-//    }
-//}
+public class CustomerMappingProfile : Profile
+{
+    public CustomerMappingProfile()
+    {
+        CreateMap<CustomerEntity, CustomerDto>().ReverseMap();
+    }
+}
