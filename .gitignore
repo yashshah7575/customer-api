@@ -422,3 +422,7 @@ Customer.Api/obj/Debug/net8.0/Customer.Api.genruntimeconfig.cache
 Customer.Api/obj/Debug/net8.0/Customer.Api.pdb
 Customer.Api/obj/Debug/net8.0/ref/Customer.Api.dll
 Customer.Api/obj/Debug/net8.0/refint/Customer.Api.dll
+
+bin
+obj
+
