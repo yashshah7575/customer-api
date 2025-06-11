@@ -1,0 +1,6 @@
+@HelloApi_HostAddress = http://localhost:5010
+
+GET {{HelloApi_HostAddress}}/
+Accept: application/json
+
+###

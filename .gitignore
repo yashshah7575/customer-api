@@ -403,3 +403,22 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+Customer.Api/bin/Debug/net8.0/Customer.Api.deps.json
+Customer.Api/bin/Debug/net8.0/Customer.Api.dll
+Customer.Api/bin/Debug/net8.0/Customer.Api.pdb
+Customer.Api/bin/Debug/net8.0/Customer.Common.dll
+Customer.Api/bin/Debug/net8.0/Customer.Common.pdb
+Customer.Api/bin/Debug/net8.0/Customer.Repository.dll
+Customer.Api/bin/Debug/net8.0/Customer.Repository.pdb
+Customer.Api/bin/Debug/net8.0/Customer.Services.dll
+Customer.Api/bin/Debug/net8.0/Customer.Services.pdb
+Customer.Api/obj/Debug/net8.0/Customer.Api.AssemblyInfo.cs
+Customer.Api/obj/Debug/net8.0/Customer.Api.AssemblyInfoInputs.cache
+Customer.Api/obj/Debug/net8.0/Customer.Api.csproj.AssemblyReference.cache
+Customer.Api/obj/Debug/net8.0/Customer.Api.csproj.CoreCompileInputs.cache
+Customer.Api/obj/Debug/net8.0/Customer.Api.csproj.FileListAbsolute.txt
+Customer.Api/obj/Debug/net8.0/Customer.Api.dll
+Customer.Api/obj/Debug/net8.0/Customer.Api.genruntimeconfig.cache
+Customer.Api/obj/Debug/net8.0/Customer.Api.pdb
+Customer.Api/obj/Debug/net8.0/ref/Customer.Api.dll
+Customer.Api/obj/Debug/net8.0/refint/Customer.Api.dll
