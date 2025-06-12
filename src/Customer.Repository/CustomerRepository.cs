@@ -45,6 +45,13 @@ namespace Customer.Repository
                 _logger.LogError($"Saving customer details to the DB.{customer}");
                 return false;
             }
+
+            var customerWithEmail = await GetCustomerByEmail(customer.Email);
+            if (customerWithEmail != null && customerWithEmail.Id != existing.Id)
+            {
+                _logger.LogError($"Customer with same email and different id exists.");
+                return false;
+            }
             existing.FirstName = customer.FirstName;
             existing.MiddleName = customer.MiddleName;
             existing.LastName = customer.LastName;
@@ -66,6 +73,13 @@ namespace Customer.Repository
             _dbContext.Customers.Remove(customer);
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<CustomerEntity?> GetCustomerByEmail(string email)
+        {
+            return await _dbContext.Customers.Where(a =>
+                        string.Equals(a.Email, email, StringComparison.CurrentCultureIgnoreCase))
+                    .FirstOrDefaultAsync();
         }
     }
 }

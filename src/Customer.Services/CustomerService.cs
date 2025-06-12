@@ -16,7 +16,11 @@ namespace Customer.Service
         public async Task<CustomerEntity>
             AddAsync(CustomerEntity customer)
         {
-            return  await _customerRepository.AddAsync(customer);
+            if (await IsUniqueCustomerEmail(customer.Email))
+            {
+                return await _customerRepository.AddAsync(customer);
+            }
+            return null;
         }
 
         public async Task<bool> DeleteAsync(Guid id)
@@ -37,6 +41,12 @@ namespace Customer.Service
         public async Task<bool> UpdateAsync(CustomerEntity customer)
         {
             return await _customerRepository.UpdateAsync(customer);
+        }
+
+        private async Task<bool> IsUniqueCustomerEmail(string email)
+        {
+            var customerEntity = await _customerRepository.GetCustomerByEmail(email);
+            return customerEntity == null ? true : false;
         }
     }
 }
