@@ -37,10 +37,10 @@
         Task<bool> DeleteAsync(Guid id);
 
         /// <summary>
-        /// 
+        /// Get customer entity by email
         /// </summary>
-        /// <param name="email"></param>
-        /// <returns></returns>
+        /// <param name="email">Email</param>
+        /// <returns>Customer Entity with email</returns>
         Task<CustomerEntity?> GetCustomerByEmail(string email);
     }
 }
