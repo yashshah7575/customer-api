@@ -21,7 +21,7 @@
 
 ## Requirement 2: Integration and/or Acceptance Testing
 
-- Integration tests available in the project:  
+- Integration tests available in the below project: [Tests Code](https://github.com/yashshah7575/customer-api/tree/main/src/Customer.Api.Integration.Tests)
   ```bash
   Customer.Api.Integration.Tests
    ```
