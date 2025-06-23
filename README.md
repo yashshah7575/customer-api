@@ -17,6 +17,9 @@
 - `GET /api/system/ping` — Health check  
 - `GET /api/system/version` — API version  
 
+#### Unit Testing
+- Exist under test folder 
+
 ---
 
 ## Requirement 2: Integration and/or Acceptance Testing
