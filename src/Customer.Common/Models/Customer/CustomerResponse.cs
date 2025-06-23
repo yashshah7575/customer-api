@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace Customer.Repository
+﻿namespace Customer.Common.Models.Customer
 {
-	public class CustomerEntity
-	{
+    public class CustomerResponse
+    {
         public Guid Id { get; set; }
 
         public string FirstName { get; set; } = default!;
@@ -14,11 +12,10 @@ namespace Customer.Repository
 
         public string Email { get; set; } = default!;
 
-        public string? CountryCode { get; set; }
+        public string? CountryCode { get; set; } = default!;
 
-        public string? AreaCode { get; set; }
+        public string? AreaCode { get; set; } = default!;
 
         public string PhoneNumber { get; set; } = default!;
     }
 }
-

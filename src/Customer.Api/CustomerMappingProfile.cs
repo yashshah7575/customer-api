@@ -6,6 +6,7 @@ public class CustomerMappingProfile : Profile
 {
     public CustomerMappingProfile()
     {
-        CreateMap<CustomerEntity, CustomerDto>().ReverseMap();
+        CreateMap<CustomerEntity, CustomerResponse>().ReverseMap();
+        CreateMap<CreateCustomerRequest, CustomerEntity>().ReverseMap();
     }
 }

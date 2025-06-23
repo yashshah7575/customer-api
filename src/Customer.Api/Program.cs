@@ -26,7 +26,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 //Automapper
-//builder.Services.AddAutoMapper(typeof(CustomerMappingProfile));
+builder.Services.AddAutoMapper(typeof(CustomerMappingProfile));
 
 //DB Registration
 builder.Services.AddDbContext<CustomerDbContext>(options =>
@@ -42,7 +42,6 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Optimal;
 });
-
 
 var app = builder.Build();
 

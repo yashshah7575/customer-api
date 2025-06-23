@@ -1,4 +1,5 @@
 ﻿using Customer.Common;
+using Customer.Common.Models.Customer;
 using Customer.Service.Interface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,29 +18,28 @@ namespace Customer.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ApiResponseData<IEnumerable<Repository.CustomerEntity>>> GetCustomer()
+        public async Task<ApiResponseData<IEnumerable<CustomerResponse>?>> GetCustomer()
         {
-            var data = await _customerService.GetAllAsync();
-            return new ApiResponseData<IEnumerable<Repository.CustomerEntity>>
+            return new ApiResponseData<IEnumerable<CustomerResponse>?>
             {
-                Data = data
+                Data = await _customerService.GetAllAsync()
             };
         }
 
         [HttpGet("{id}")]
-        public async Task<ApiResponseData<Repository.CustomerEntity>> GetCustomerById(Guid id)
+        public async Task<ApiResponseData<CustomerResponse?>> GetCustomerById(Guid id)
         {
-            return new ApiResponseData<Repository.CustomerEntity>
+            return new ApiResponseData<CustomerResponse?>
             {
-                Data = await _customerService.GetByIdAsync(id) ?? new Repository.CustomerEntity()
+                Data = await _customerService.GetByIdAsync(id)
             };
         }
 
         [HttpPost]
-        public async Task<ApiResponseData<Repository.CustomerEntity>>
-                AddCustomer([FromBody] Repository.CustomerEntity customer)
+        public async Task<ApiResponseData<CustomerResponse>>
+                AddCustomer([FromBody] CreateCustomerRequest customer)
         {
-            return new ApiResponseData<Repository.CustomerEntity>
+            return new ApiResponseData<CustomerResponse>
             {
                 Data = await _customerService.AddAsync(customer)
             };
@@ -47,11 +47,11 @@ namespace Customer.Api.Controllers
 
         [HttpPut("{id}")]
         public async Task<ApiResponseData<bool>> EditCustomer
-            ([FromBody] Repository.CustomerEntity customer, [FromRoute] Guid id)
+            ([FromBody] UpdateCustomerRequest customer, [FromRoute] Guid id)
         {
             return new ApiResponseData<bool>
             {
-                Data = await _customerService.UpdateAsync(customer)
+                Data = await _customerService.UpdateAsync(customer, id)
             };
         }
 
