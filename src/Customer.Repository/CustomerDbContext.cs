@@ -30,6 +30,14 @@ namespace Customer.Repository
                 .IsRequired(false); // Optional (nullable by default)
 
             modelBuilder.Entity<CustomerEntity>()
+              .Property(c => c.AreaCode)
+              .IsRequired(false); // Optional (nullable by default)
+
+            modelBuilder.Entity<CustomerEntity>()
+              .Property(c => c.CountryCode)
+              .IsRequired(false); // Optional (nullable by default)
+
+            modelBuilder.Entity<CustomerEntity>()
                 .Property(c => c.PhoneNumber)
                 .IsRequired()         // Not null
                 .HasMaxLength(15);

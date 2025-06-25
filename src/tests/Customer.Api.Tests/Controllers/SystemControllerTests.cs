@@ -1,13 +1,10 @@
-﻿using System;
-using System.IO;
-using Customer.Api.Controllers;
+﻿using Customer.Api.Controllers;
 using Customer.Common;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework;
 
 namespace Customer.Api.Tests.Controllers
 {
