@@ -22,5 +22,7 @@ namespace Customer.Common.Models.Customer
 
         [Required]
         public string PhoneNumber { get; set; } = default!;
+
+
     } 
 }

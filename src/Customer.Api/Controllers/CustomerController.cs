@@ -16,7 +16,10 @@ namespace Customer.Api.Controllers
         {
             _customerService = customerService;
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<ApiResponseData<IEnumerable<CustomerResponse>?>> GetCustomer()
         {
@@ -26,6 +29,11 @@ namespace Customer.Api.Controllers
             };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public async Task<ApiResponseData<CustomerResponse?>> GetCustomerById(Guid id)
         {

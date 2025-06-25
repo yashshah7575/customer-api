@@ -4,7 +4,7 @@ public class Program
 {
     static async Task Main()
     {
-        var api = new Helper("http://localhost:8080/");
+        var api = new Helper("http://localhost:28743/");
 
         while (true)
         {
