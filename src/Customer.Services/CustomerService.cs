@@ -115,10 +115,6 @@ namespace Customer.Service
                     && updateCustomerRequest.CountryCode != existingCustomer.CountryCode
                     ? updateCustomerRequest.CountryCode : existingCustomer.CountryCode;
 
-                existingCustomer.AreaCode = !string.IsNullOrEmpty(updateCustomerRequest.AreaCode)
-                    && updateCustomerRequest.AreaCode != existingCustomer.AreaCode
-                    ? updateCustomerRequest.AreaCode : existingCustomer.AreaCode;
-
                 existingCustomer.PhoneNumber = !string.IsNullOrEmpty(updateCustomerRequest.PhoneNumber)
                                             && updateCustomerRequest.PhoneNumber != existingCustomer.PhoneNumber
                                             ? updateCustomerRequest.PhoneNumber : existingCustomer.PhoneNumber;

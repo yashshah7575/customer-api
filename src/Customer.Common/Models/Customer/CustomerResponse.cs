@@ -14,8 +14,6 @@
 
         public string? CountryCode { get; set; } = default!;
 
-        public string? AreaCode { get; set; } = default!;
-
         public string PhoneNumber { get; set; } = default!;
     }
 }
