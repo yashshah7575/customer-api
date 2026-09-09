@@ -4,15 +4,13 @@
 
 The API must know the current tenant before it reads or writes customer data. Incoming HTTP is untrusted. Clients can send any header, route value, or JSON field.
 
-Keycloak Organizations can emit an `organization` claim containing alias and id when the `organization` scope is requested.
-
 ## Decision
 
 Resolve tenant **only** from a validated access token:
 
-- `TenantId` = organization id
-- `TenantAlias` = organization alias
-- Require exactly one organization for tenant-scoped operations
+- `TenantId` = `tenant_id` claim
+- Require exactly one tenant for non-platform tenant-scoped operations
+- `PlatformAdmin` may omit `tenant_id` for cross-tenant reads
 
 Do not read tenant identity from headers, routes, query strings, or bodies.
 
@@ -26,7 +24,6 @@ Do not read tenant identity from headers, routes, query strings, or bodies.
 
 ## Consequences
 
-- Swagger and other clients must request the `organization` scope.
-- Multi-org users must select an organization at login or receive 403.
-- Platform administrators can operate without an organization on platform routes only.
+- Protocol mappers must emit `tenant_id` on human and machine tokens.
+- Ambiguous tokens receive 403.
 - Claim parsing is centralized so controllers never inspect raw JWT JSON.

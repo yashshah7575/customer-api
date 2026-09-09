@@ -8,7 +8,7 @@ namespace Customer.Api.Integration.Tests;
 /// </summary>
 public class KeycloakEndToEndTests
 {
-    [Fact(Skip = "Requires a running local Keycloak. See keycloak/README.md.")]
+        [Fact(Skip = "Requires a running local Keycloak. Use scripts/keycloak-smoke-test.sh instead.")]
     [Trait("Category", "Keycloak")]
     public void KeycloakRealm_IsDocumentedSeparatelyFromFastTests()
     {

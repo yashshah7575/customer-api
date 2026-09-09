@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Customer.Api.Controllers;
 
 [ApiController]
-[Authorize(Policy = AuthorizationPolicies.TenantManage)]
+[Authorize(Policy = AuthorizationPolicies.CanReadCustomers)]
 [RequireTenant]
 [Route("api/tenant")]
 [Produces("application/json")]
@@ -22,8 +22,7 @@ public class TenantController : ControllerBase
         {
             Data = new TenantResponse
             {
-                TenantId = tenantContext.TenantId,
-                TenantAlias = tenantContext.TenantAlias
+                TenantId = tenantContext.TenantId
             }
         });
     }

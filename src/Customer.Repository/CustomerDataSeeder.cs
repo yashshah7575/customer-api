@@ -15,41 +15,41 @@ public static class CustomerDataSeeder
         dbContext.Customers.AddRange(
             new CustomerEntity
             {
-                Id = DemoTenants.AcmeAliceId,
-                TenantId = DemoTenants.AcmeBankId,
+                Id = DemoTenants.CustomerAPrimaryId,
+                TenantId = DemoTenants.CustomerA,
                 FirstName = "Alice",
                 LastName = "Nguyen",
-                Email = "alice.nguyen@acme-bank.example",
+                Email = "alice.nguyen@customer-a.example",
                 CountryCode = "+1",
                 PhoneNumber = "4155550101"
             },
             new CustomerEntity
             {
-                Id = DemoTenants.AcmeBobId,
-                TenantId = DemoTenants.AcmeBankId,
-                FirstName = "Bob",
+                Id = DemoTenants.CustomerASecondaryId,
+                TenantId = DemoTenants.CustomerA,
+                FirstName = "Aaron",
                 LastName = "Patel",
-                Email = "bob.patel@acme-bank.example",
+                Email = "aaron.patel@customer-a.example",
                 CountryCode = "+1",
                 PhoneNumber = "4155550102"
             },
             new CustomerEntity
             {
-                Id = DemoTenants.ContosoCarolId,
-                TenantId = DemoTenants.ContosoFinanceId,
-                FirstName = "Carol",
+                Id = DemoTenants.CustomerBPrimaryId,
+                TenantId = DemoTenants.CustomerB,
+                FirstName = "Bob",
                 LastName = "Diaz",
-                Email = "carol.diaz@contoso-finance.example",
+                Email = "bob.diaz@customer-b.example",
                 CountryCode = "+1",
                 PhoneNumber = "2065550101"
             },
             new CustomerEntity
             {
-                Id = DemoTenants.ContosoDaveId,
-                TenantId = DemoTenants.ContosoFinanceId,
-                FirstName = "Dave",
+                Id = DemoTenants.CustomerBSecondaryId,
+                TenantId = DemoTenants.CustomerB,
+                FirstName = "Bella",
                 LastName = "Okoye",
-                Email = "dave.okoye@contoso-finance.example",
+                Email = "bella.okoye@customer-b.example",
                 CountryCode = "+1",
                 PhoneNumber = "2065550102"
             });

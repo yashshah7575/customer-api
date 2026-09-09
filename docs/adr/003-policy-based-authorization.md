@@ -2,18 +2,16 @@
 
 ## Context
 
-Keycloak can put roles on a realm or on a client. The API needs four capabilities: read customers, write customers, manage a tenant, and manage the platform.
-
-Decorating every action with `[Authorize(Roles = "tenant-editor")]` couples HTTP to Keycloak naming and makes role-to-permission changes a search-and-replace exercise.
+Keycloak can put roles on a realm or on a client. Decorating every action with `[Authorize(Roles = "Operator")]` couples HTTP to IdP naming.
 
 ## Decision
 
-Normalize Keycloak client roles into application permissions, then expose ASP.NET Core policies:
+Use **client roles** on `customer-api`, map them to application permissions, then expose ASP.NET Core policies:
 
-- `Customers.Read`
-- `Customers.Write`
-- `Tenant.Manage`
-- `Platform.Manage`
+- `CanReadCustomers`
+- `CanManageCustomers`
+- `CanDeleteCustomers`
+- `PlatformAdministration`
 
 Handlers check `IApplicationIdentity`, not claim JSON.
 
@@ -23,10 +21,11 @@ Handlers check `IApplicationIdentity`, not claim JSON.
 
 **Resource-based authorization per customer entity.** Correct for object-level ACLs, unnecessary for "all rows in the current tenant". Tenant isolation already happens in persistence.
 
-**A general-purpose policy engine (OPA, Cedar).** Valuable at larger scale. Too much machinery for four permissions.
+**A general-purpose policy engine (OPA, Cedar).** Valuable at larger scale. Too much machinery for this sample.
 
 ## Consequences
 
 - Adding a permission is a mapping change plus a policy registration.
-- `platform-admin` does not inherit tenant write access.
-- Tests can mint tokens with client roles and assert HTTP 403/200 without Keycloak.
+- Operator cannot delete; Viewer cannot write; ServiceClient is read-only.
+- `PlatformAdmin` cross-tenant access is explicit in the query filter and tests.
+- Tests mint tokens with roles and assert HTTP 401/403/200 without Keycloak.

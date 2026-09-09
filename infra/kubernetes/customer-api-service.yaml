@@ -1,0 +1,16 @@
+# This manifest demonstrates deployment concepts for the Customer API.
+# It is not a complete production Keycloak HA topology, ingress, or cluster design.
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-api
+  labels:
+    app: customer-api
+spec:
+  selector:
+    app: customer-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP

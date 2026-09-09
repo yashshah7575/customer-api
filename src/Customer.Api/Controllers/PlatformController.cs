@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Customer.Api.Controllers;
 
 [ApiController]
-[Authorize(Policy = AuthorizationPolicies.PlatformManage)]
+[Authorize(Policy = AuthorizationPolicies.PlatformAdministration)]
 [Route("api/platform")]
 [Produces("application/json")]
 public class PlatformController : ControllerBase
@@ -20,15 +20,15 @@ public class PlatformController : ControllerBase
         [
             new()
             {
-                TenantId = DemoTenants.AcmeBankId,
-                Alias = DemoTenants.AcmeBankAlias,
-                Name = DemoTenants.AcmeBankName
+                TenantId = DemoTenants.CustomerA,
+                Alias = DemoTenants.CustomerA,
+                Name = "Customer A"
             },
             new()
             {
-                TenantId = DemoTenants.ContosoFinanceId,
-                Alias = DemoTenants.ContosoFinanceAlias,
-                Name = DemoTenants.ContosoFinanceName
+                TenantId = DemoTenants.CustomerB,
+                Alias = DemoTenants.CustomerB,
+                Name = "Customer B"
             }
         ];
 

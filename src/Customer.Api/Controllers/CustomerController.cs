@@ -22,7 +22,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = AuthorizationPolicies.CustomersRead)]
+    [Authorize(Policy = AuthorizationPolicies.CanReadCustomers)]
     public async Task<ActionResult<ApiResponseData<IEnumerable<CustomerResponse>?>>> GetCustomer()
     {
         return Ok(new ApiResponseData<IEnumerable<CustomerResponse>?>
@@ -32,7 +32,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = AuthorizationPolicies.CustomersRead)]
+    [Authorize(Policy = AuthorizationPolicies.CanReadCustomers)]
     public async Task<ActionResult<ApiResponseData<CustomerResponse?>>> GetCustomerById(Guid id)
     {
         return Ok(new ApiResponseData<CustomerResponse?>
@@ -42,7 +42,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    [Authorize(Policy = AuthorizationPolicies.CanManageCustomers)]
     public async Task<ActionResult<ApiResponseData<CustomerResponse>>> AddCustomer(
         [FromBody] CreateCustomerRequest customer)
     {
@@ -53,7 +53,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    [Authorize(Policy = AuthorizationPolicies.CanManageCustomers)]
     public async Task<ActionResult<ApiResponseData<bool>>> EditCustomer(
         [FromBody] UpdateCustomerRequest customer,
         [FromRoute] Guid id)
@@ -65,7 +65,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    [Authorize(Policy = AuthorizationPolicies.CanDeleteCustomers)]
     public async Task<ActionResult<ApiResponseData<bool>>> DeleteCustomer(Guid id)
     {
         return Ok(new ApiResponseData<bool>

@@ -10,30 +10,32 @@ public class KeycloakRoleNormalizerTests
     private readonly KeycloakRoleNormalizer _normalizer = new();
 
     [Fact]
+    public void Normalize_ReadsMappedRolesClaim()
+    {
+        var roles = _normalizer.Normalize([new Claim("roles", ApplicationRoles.CustomerAdmin)]);
+
+        roles.Should().BeEquivalentTo(ApplicationRoles.CustomerAdmin);
+    }
+
+    [Fact]
     public void Normalize_ReadsClientRolesFromResourceAccess()
     {
-        var resourceAccess = """{"customer-api":{"roles":["tenant-reader","tenant-editor"]}}""";
+        var resourceAccess = """{"customer-api":{"roles":["Viewer","Operator"]}}""";
 
         var roles = _normalizer.Normalize([new Claim("resource_access", resourceAccess)]);
 
-        roles.Should().BeEquivalentTo(ApplicationRoles.TenantReader, ApplicationRoles.TenantEditor);
+        roles.Should().BeEquivalentTo(ApplicationRoles.Viewer, ApplicationRoles.Operator);
     }
 
     [Fact]
     public void Normalize_IgnoresUnknownRoles()
     {
-        var resourceAccess = """{"customer-api":{"roles":["realm-admin","tenant-reader"]}}""";
+        var roles = _normalizer.Normalize(
+        [
+            new Claim("roles", "realm-admin"),
+            new Claim("roles", ApplicationRoles.Viewer)
+        ]);
 
-        var roles = _normalizer.Normalize([new Claim("resource_access", resourceAccess)]);
-
-        roles.Should().BeEquivalentTo(ApplicationRoles.TenantReader);
-    }
-
-    [Fact]
-    public void Normalize_ReadsSimpleRolesClaim()
-    {
-        var roles = _normalizer.Normalize([new Claim("roles", ApplicationRoles.PlatformAdmin)]);
-
-        roles.Should().BeEquivalentTo(ApplicationRoles.PlatformAdmin);
+        roles.Should().BeEquivalentTo(ApplicationRoles.Viewer);
     }
 }

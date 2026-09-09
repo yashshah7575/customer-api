@@ -22,7 +22,7 @@ builder.Services.AddScoped<TenantContext>();
 builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
 builder.Services.AddScoped<ApplicationIdentity>();
 builder.Services.AddScoped<IApplicationIdentity>(sp => sp.GetRequiredService<ApplicationIdentity>());
-builder.Services.AddSingleton<KeycloakOrganizationClaimParser>();
+builder.Services.AddSingleton<TenantClaimParser>();
 builder.Services.AddSingleton<KeycloakRoleNormalizer>();
 
 builder.Services.AddDbContext<CustomerDbContext>(options =>
@@ -50,7 +50,7 @@ if (!app.Environment.IsProduction())
 }
 
 app.MapControllers();
-app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/", () => Results.Redirect("/swagger")).AllowAnonymous();
 
 app.Run();
 

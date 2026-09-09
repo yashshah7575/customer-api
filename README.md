@@ -1,103 +1,198 @@
-# Multi-Tenant Identity & Authorization with ASP.NET Core and Keycloak
+# Customer API — Multi-Tenant Identity with Keycloak
 
-Sample code for a **Staff Software Engineer (IAM / Keycloak)** discussion. It shows how I would orchestrate identity and authorization for a multi-tenant B2B API—the same class of problem as a TMS, where shippers, carriers, and platform operators share one platform but must never see each other's data.
+A small .NET customer API used to demonstrate **enterprise identity and multi-tenant API security**.
 
-This is independent sample code, not a Mastery product and not a production deployment.
+This is a local demonstration, not a production platform. Keycloak issues identity. The API owns tenant isolation and domain authorization.
 
-The API is a **resource server**. Keycloak issues tokens. The application validates them, resolves the tenant from the organization claim, and enforces access with policies plus an EF Core query filter.
+## What This Demonstrates
 
-## What this demonstrates
-
-- OAuth 2.0 / OIDC JWT Bearer validation (issuer, signature, audience, expiry)
-- Keycloak 26 Organizations as tenants in **one realm** (`customer-platform`)
-- Tenant identity from the **token only**—never from headers, routes, or request bodies
-- Policy-based authorization (`Customers.Read/Write`, `Tenant.Manage`, `Platform.Manage`)
-- Defense-in-depth data isolation and 404 on cross-tenant object access
-- Swagger Authorization Code + PKCE against a public client (no committed secret)
-- Deterministic security tests that do not require a live Keycloak for CI
+* OAuth2 / OIDC
+* Keycloak
+* JWT API authentication
+* RBAC
+* Tenant isolation
+* Client Credentials
+* Identity brokering architecture
+* Docker Compose
+* Kubernetes
+* Automated authorization tests
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Developer --> Swagger
-  Swagger -->|"Authorization Code + PKCE"| Keycloak
-  Keycloak -->|"access token"| Swagger
-  Swagger -->|"Bearer JWT"| Api[Customer.Api]
-  Api --> AuthN[JWT Bearer validation]
-  AuthN --> Claims[Organization and role parsers]
-  Claims --> Policies[Authorization policies]
-  Policies --> Services[Customer.Services]
-  Services --> Repo[Customer.Repository]
-  Repo --> Filter[EF global query filter]
-  Filter --> Memory[EF Core InMemory demo store]
+    User[Enterprise User] --> IdP[Enterprise Identity Provider]
+    IdP --> KC[Keycloak]
+    KC -->|OIDC / JWT| API[Customer API]
+    API --> AUTH[Tenant Authorization]
+    AUTH --> DATA[Application Data]
+
+    EXT[External System] -->|Client Credentials| KC
 ```
 
-EF Core InMemory is only here so the demo stays self-contained. It is not a production database.
+```text
+Authentication
+      ↓
+Keycloak
 
-## Getting started
+Identity Context
+      ↓
+JWT
 
-Requires the .NET 10 SDK and Docker.
+Tenant + Role Authorization
+      ↓
+.NET API
+```
+
+Keycloak authenticates users and machines, federates enterprise IdPs, and issues access tokens.
+
+The Customer API validates those tokens, maps roles to policies, and enforces tenant ownership in application code and persistence. Callers cannot choose a tenant by sending `tenant_id` in a body, query string, header, or route.
+
+## Authorization Model
+
+Application roles live on the `customer-api` Keycloak client so the API contract is explicit. Controllers use named policies, not raw role strings.
+
+| Operation            | PlatformAdmin | CustomerAdmin | Operator | Viewer | ServiceClient |
+| -------------------- | ------------: | ------------: | -------: | -----: | ------------: |
+| Read customers       |           Yes |           Yes |      Yes |    Yes |           Yes |
+| Create customer data |           Yes |           Yes |      Yes |     No |            No |
+| Update customer data |           Yes |           Yes |      Yes |     No |            No |
+| Delete customer data |           Yes |           Yes |       No |     No |            No |
+| Cross-tenant access  |           Yes |            No |       No |     No |            No |
+
+`ServiceClient` is a machine role with **read-only** access inside its configured tenant. It is never mapped to `PlatformAdmin`.
+
+`PlatformAdmin` may read across tenants. Creating a customer still requires a `tenant_id` claim so records are never written without an owner.
+
+## Multi-Tenant Security
+
+Tenant context comes from trusted token claims.
+
+Clients cannot choose their tenant simply by passing `tenant_id` in an API request.
+
+- `customer-a` users only see `customer-a` rows.
+- `customer-a` requesting a `customer-b` id receives **404 Not Found**.
+- `PlatformAdmin` cross-tenant reads are explicit and covered by tests.
+
+## Running Locally
+
+Requires Docker and the .NET 10 SDK.
 
 ```bash
-docker compose up keycloak
+docker compose up -d
 dotnet run --project src/Customer.Api
 ```
 
 | | |
 |---|---|
-| API / Swagger | http://localhost:5080/swagger |
 | Keycloak | http://localhost:8080 |
+| Keycloak Admin | http://localhost:8080 (local admin from `.env.example`) |
+| API | http://localhost:5080 |
+| Swagger | http://localhost:5080/swagger |
 
-After the first Keycloak import, attach demo users to organizations. Steps and pinned organization IDs are in [keycloak/README.md](keycloak/README.md).
+Optional: `cp .env.example .env` and `docker compose --profile api up -d --build` to run the API in Docker as well.
 
-## Demo users
+Realm `customer-api-demo` is imported automatically. No Admin UI configuration is required for the demo.
 
-Fake local-development password: `DevPassword123!`  
-Keycloak admin: `admin` / `admin` (local only)
+## Demo Users
 
-| Username | Organization | Role |
+**LOCAL DEVELOPMENT / DEMONSTRATION ONLY.** These passwords are throwaway values in the realm import. They are not production credentials.
+
+Shared demo password: `DevPassword123!`
+
+| Username | `tenant_id` | Role |
 |---|---|---|
-| `acme.reader` | Acme Bank | `tenant-reader` |
-| `acme.editor` | Acme Bank | `tenant-editor` |
-| `acme.admin` | Acme Bank | `tenant-admin` |
-| `contoso.reader` | Contoso Finance | `tenant-reader` |
-| `contoso.editor` | Contoso Finance | `tenant-editor` |
-| `contoso.admin` | Contoso Finance | `tenant-admin` |
-| `platform.admin` | none | `platform-admin` |
+| `alice-admin` | `customer-a` | `CustomerAdmin` |
+| `alice-operator` | `customer-a` | `Operator` |
+| `bob-admin` | `customer-b` | `CustomerAdmin` |
+| `bob-viewer` | `customer-b` | `Viewer` |
+| `platform-admin` | _(none)_ | `PlatformAdmin` |
 
-In Swagger: **Authorize**, sign in, select an organization if prompted, then call `GET /api/me` and the customer endpoints.
+Keycloak's own admin console login is the local `KEYCLOAK_ADMIN` value from `.env.example`.
 
-An Acme token cannot read a Contoso customer by ID (404, not 403). `TenantId` in a request body is ignored.
+## Human Authentication
 
-## Authorization mapping
+Interactive login uses **Authorization Code + PKCE** through Swagger. Resource Owner Password Credentials is not the demo login flow.
 
-| Keycloak client role | Permissions |
-|---|---|
-| `tenant-reader` | `Customers.Read` |
-| `tenant-editor` | `Customers.Read`, `Customers.Write` |
-| `tenant-admin` | those plus `Tenant.Manage` |
-| `platform-admin` | `Platform.Manage` only |
+1. Start Keycloak: `docker compose up -d`
+2. Start the API: `dotnet run --project src/Customer.Api`
+3. Open http://localhost:5080/swagger
+4. Click **Authorize**
+5. Sign in as a demo user, for example `alice-admin`
+6. Call `GET /api/me`, then `/api/customers`
 
-`platform-admin` is not a superuser over tenant data. Platform and tenant control planes stay separate.
+## Machine Authentication
 
-## Tests
+The confidential client `customer-a-integration` uses **OAuth2 Client Credentials**. It is bound to `customer-a` and the `ServiceClient` role.
+
+```bash
+TOKEN=$(curl -sS -X POST "$KEYCLOAK_URL/realms/customer-api-demo/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=customer-a-integration" \
+  -d "client_secret=$CLIENT_SECRET" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:5080/api/customers
+```
+
+Set `KEYCLOAK_URL` and `CLIENT_SECRET` from your environment (see `.env.example`). Do not commit real client secrets.
+
+A helper script does the same check:
+
+```bash
+cp .env.example .env
+./scripts/keycloak-smoke-test.sh
+```
+
+PowerShell: `./scripts/keycloak-smoke-test.ps1`
+
+## Security Tests
 
 ```bash
 dotnet test src/Customer.Api.sln
 ```
 
-The default suite uses locally signed JWTs and stays off the network. Optional Keycloak checks are skipped unless you pass `--filter Category=Keycloak`.
+CI and `dotnet test` use a deterministic test JWT handler. They do **not** require Keycloak. The smoke script above is the live-token check.
 
-## Docs
+## Identity Brokering
 
-- [Architecture](docs/architecture.md)
-- [Authentication flow](docs/authentication-flow.md)
-- [Authorization model](docs/authorization-model.md)
-- [Multi-tenancy](docs/multi-tenancy.md)
-- [Threat model](docs/threat-model.md)
-- ADRs: [organizations vs realms](docs/adr/001-keycloak-organizations-vs-realms.md) · [tenant from token](docs/adr/002-tenant-resolution-from-token.md) · [policies](docs/adr/003-policy-based-authorization.md) · [data isolation](docs/adr/004-tenant-data-isolation.md)
+```text
+Entra / Okta / SAML
+        ↓
+     Keycloak
+        ↓
+       API
+```
 
-## Demo limits
+This repository does not integrate a paid enterprise IdP. The API only consumes a normalized JWT. How brokering would fit is documented in [docs/identity-architecture.md](docs/identity-architecture.md).
 
-`start-dev`, InMemory persistence, and demo passwords are local-only. A production TMS would still need a real database, Keycloak in production mode, HTTPS, token lifetime/revocation, and confidential clients for service-to-service calls. Leftover Lambda/Terraform files in `src/` are not part of this sample.
+## Kubernetes
+
+[infra/kubernetes](infra/kubernetes) contains a small Deployment and Service example: image, ports, authentication settings, probes, and resource requests/limits.
+
+These manifests demonstrate deployment concepts. They are **not** a production Keycloak HA topology.
+
+## Production Considerations
+
+### Demo architecture
+
+- Keycloak `start-dev` and an imported realm
+- In-memory EF Core store
+- Throwaway local users and a local machine-client secret
+- HTTP on localhost
+- Single-node Docker Compose
+
+### What a real deployment would require
+
+Production Keycloak and API hosting would still need HA/multiple replicas, a production database, TLS, secret management, backups, an upgrade strategy, monitoring, resource sizing, availability targets, network policies, disaster recovery, key rotation, and audit logging.
+
+Those items are intentionally not implemented here.
+
+## Design notes
+
+- [Identity architecture](docs/identity-architecture.md)
+- [Security design](docs/security-design.md)
+- [ADRs](docs/adr)
+- Leftover AWS Lambda / Terraform files under `src/` are not part of this sample.

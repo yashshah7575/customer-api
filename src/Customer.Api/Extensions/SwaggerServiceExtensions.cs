@@ -22,7 +22,7 @@ public static class SwaggerServiceExtensions
             {
                 Title = "Customer API",
                 Version = "v1",
-                Description = "Multi-tenant Customer API secured with OAuth 2.0, OpenID Connect, and Keycloak Organizations."
+                Description = "Multi-tenant Customer API secured with OAuth 2.0 / OIDC, JWT Bearer, and Keycloak."
             });
 
             options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
@@ -37,8 +37,7 @@ public static class SwaggerServiceExtensions
                         Scopes = new Dictionary<string, string>
                         {
                             ["openid"] = "OpenID Connect",
-                            ["profile"] = "Profile",
-                            ["organization"] = "Keycloak organization membership"
+                            ["profile"] = "Profile"
                         }
                     }
                 }
@@ -55,7 +54,7 @@ public static class SwaggerServiceExtensions
                             Id = "oauth2"
                         }
                     },
-                    new[] { "openid", "profile", "organization" }
+                    new[] { "openid", "profile" }
                 }
             });
         });
@@ -72,7 +71,7 @@ public static class SwaggerServiceExtensions
             options.OAuthClientId("customer-api-swagger");
             options.OAuthUsePkce();
             options.OAuthScopeSeparator(" ");
-            options.OAuthScopes("openid", "profile", "organization");
+            options.OAuthScopes("openid", "profile");
             options.OAuthAppName("Customer API Swagger");
         });
 

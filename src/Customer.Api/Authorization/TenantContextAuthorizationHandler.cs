@@ -5,9 +5,9 @@ namespace Customer.Api.Authorization;
 
 public sealed class TenantContextAuthorizationHandler : AuthorizationHandler<TenantContextRequirement>
 {
-    private readonly ITenantContext _tenantContext;
+    private readonly TenantContext _tenantContext;
 
-    public TenantContextAuthorizationHandler(ITenantContext tenantContext)
+    public TenantContextAuthorizationHandler(TenantContext tenantContext)
     {
         _tenantContext = tenantContext;
     }
@@ -16,7 +16,7 @@ public sealed class TenantContextAuthorizationHandler : AuthorizationHandler<Ten
         AuthorizationHandlerContext context,
         TenantContextRequirement requirement)
     {
-        if (_tenantContext.HasValidTenant)
+        if (_tenantContext.CanAccessTenantData)
         {
             context.Succeed(requirement);
         }

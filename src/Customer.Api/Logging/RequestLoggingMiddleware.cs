@@ -32,7 +32,7 @@ public sealed class RequestLoggingMiddleware
             ["CorrelationId"] = correlationId,
             ["SubjectId"] = tenantContext.SubjectId,
             ["TenantId"] = tenantContext.TenantId,
-            ["TenantAlias"] = tenantContext.TenantAlias,
+            ["IsPlatformAdmin"] = tenantContext.IsPlatformAdmin,
             ["HttpMethod"] = context.Request.Method,
             ["Route"] = route
         }))

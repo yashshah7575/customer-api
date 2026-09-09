@@ -1,36 +1,26 @@
 # Authorization model
 
-## Why policies instead of roles
+Keycloak role names are an identity-provider detail. Controllers ask named policies such as `CanManageCustomers`, not `if role == Operator`.
 
-Keycloak role names are an identity-provider detail. Controllers should ask "can this caller write customers?" not "is this `tenant-editor`?" Mapping roles to permissions in one place lets the IdP change without rewriting attributes on every action.
+## Client roles
 
-## Mapping
+Roles are **application/client roles** on `customer-api`, not realm roles. That keeps the authorization boundary on this API instead of mixing in Keycloak built-in realm roles.
 
-| Client role on `customer-api` | Permissions |
+| Client role | Permissions |
 |---|---|
-| `tenant-reader` | `Customers.Read` |
-| `tenant-editor` | `Customers.Read`, `Customers.Write` |
-| `tenant-admin` | `Customers.Read`, `Customers.Write`, `Tenant.Manage` |
-| `platform-admin` | `Platform.Manage` |
+| `Viewer` | `Customers.Read` |
+| `Operator` | `Customers.Read`, `Customers.Manage` |
+| `CustomerAdmin` | `Customers.Read`, `Customers.Manage`, `Customers.Delete` |
+| `ServiceClient` | `Customers.Read` |
+| `PlatformAdmin` | those customer permissions plus `Platform.Administer` |
 
-`platform-admin` is intentionally **not** a superuser over tenant data. Platform administration is a different control plane. Cross-tenant Customer APIs are not exposed.
+## Policies
 
-## Policy composition
+| Policy | Meaning |
+|---|---|
+| `CanReadCustomers` | Authenticated + read permission + tenant context (or PlatformAdmin) |
+| `CanManageCustomers` | Create/update |
+| `CanDeleteCustomers` | Delete (not Operator, Viewer, or ServiceClient) |
+| `PlatformAdministration` | Platform catalog only |
 
-Tenant-scoped policies require:
-
-1. An authenticated user
-2. The matching permission
-3. A valid single tenant context
-
-`Platform.Manage` requires authentication and the platform permission only.
-
-## Where roles are read
-
-`KeycloakRoleNormalizer` accepts:
-
-- `resource_access.customer-api.roles` (preferred Keycloak client-role claim)
-- a simple `roles` claim (useful in tests)
-- `realm_access.roles` only if they match known application roles
-
-Unknown roles are ignored. That prevents accidental privilege from leftover realm roles such as `offline_access`.
+Unknown roles are ignored so leftover Keycloak roles cannot grant application privileges.

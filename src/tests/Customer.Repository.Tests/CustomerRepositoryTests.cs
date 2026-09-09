@@ -10,8 +10,7 @@ public class CustomerRepositoryTests : IDisposable
 {
     private readonly TenantContext _tenantContext = new()
     {
-        TenantId = DemoTenants.AcmeBankId,
-        TenantAlias = DemoTenants.AcmeBankAlias,
+        TenantId = DemoTenants.CustomerA,
         TenantStatus = TenantResolutionStatus.Valid,
         IsAuthenticated = true
     };
@@ -40,7 +39,7 @@ public class CustomerRepositoryTests : IDisposable
 
         result.Should().NotBeNull();
         result.Id.Should().NotBe(Guid.Empty);
-        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
+        result.TenantId.Should().Be(DemoTenants.CustomerA);
 
         var dbCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == result.Id);
         dbCustomer.Should().NotBeNull();
@@ -71,7 +70,7 @@ public class CustomerRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenCustomerBelongsToAnotherTenant()
     {
-        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol@contoso.example", DemoTenants.ContosoFinanceId);
+        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol@contoso.example", DemoTenants.CustomerB);
         _context.Customers.Add(foreignCustomer);
         await _context.SaveChangesAsync();
 
@@ -86,13 +85,13 @@ public class CustomerRepositoryTests : IDisposable
         _context.Customers.AddRange(
             CreateCustomer("A", "A", "a@acme.example"),
             CreateCustomer("B", "B", "b@acme.example"),
-            CreateCustomer("C", "C", "c@contoso.example", DemoTenants.ContosoFinanceId));
+            CreateCustomer("C", "C", "c@contoso.example", DemoTenants.CustomerB));
         await _context.SaveChangesAsync();
 
         var result = await _repository.GetAllAsync();
 
         result.Should().HaveCount(2);
-        result.Should().OnlyContain(customer => customer.TenantId == DemoTenants.AcmeBankId);
+        result.Should().OnlyContain(customer => customer.TenantId == DemoTenants.CustomerA);
     }
 
     [Fact]
@@ -108,7 +107,7 @@ public class CustomerRepositoryTests : IDisposable
         result.Should().BeTrue();
         var dbCustomer = await _context.Customers.FirstAsync(c => c.Id == customer.Id);
         dbCustomer.FirstName.Should().Be("New");
-        dbCustomer.TenantId.Should().Be(DemoTenants.AcmeBankId);
+        dbCustomer.TenantId.Should().Be(DemoTenants.CustomerA);
     }
 
     [Fact]
@@ -135,7 +134,7 @@ public class CustomerRepositoryTests : IDisposable
     [Fact]
     public async Task DeleteAsync_ShouldReturnFalse_WhenCustomerBelongsToAnotherTenant()
     {
-        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol-del@contoso.example", DemoTenants.ContosoFinanceId);
+        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol-del@contoso.example", DemoTenants.CustomerB);
         _context.Customers.Add(foreignCustomer);
         await _context.SaveChangesAsync();
 
@@ -146,6 +145,23 @@ public class CustomerRepositoryTests : IDisposable
             .Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task GetAllAsync_PlatformAdmin_SeesEveryTenant()
+    {
+        _tenantContext.IsPlatformAdmin = true;
+        _tenantContext.TenantId = null;
+        _tenantContext.TenantStatus = TenantResolutionStatus.None;
+
+        _context.Customers.AddRange(
+            CreateCustomer("A", "A", "a@a.example"),
+            CreateCustomer("B", "B", "b@b.example", DemoTenants.CustomerB));
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetAllAsync();
+
+        result.Should().HaveCount(2);
+    }
+
     private static CustomerEntity CreateCustomer(
         string firstName,
         string lastName,
@@ -154,7 +170,7 @@ public class CustomerRepositoryTests : IDisposable
         new()
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId ?? DemoTenants.AcmeBankId,
+            TenantId = tenantId ?? DemoTenants.CustomerA,
             FirstName = firstName,
             LastName = lastName,
             Email = email,

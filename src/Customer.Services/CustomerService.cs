@@ -79,6 +79,11 @@ public class CustomerService : ICustomerService
             var customerEntity = await _customerRepository.GetByIdAsync(id);
             if (customerEntity is null)
             {
+                _logger.LogWarning(
+                    "Customer {CustomerId} was not visible to tenant {TenantId} (platformAdmin={IsPlatformAdmin})",
+                    id,
+                    _tenantContext.TenantId,
+                    _tenantContext.IsPlatformAdmin);
                 throw new KeyNotFoundException($"Customer with id: {id} does not exist. Please try a valid customer id.");
             }
 

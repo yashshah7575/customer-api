@@ -24,7 +24,7 @@ public class MeController : ControllerBase
                 Subject = tenantContext.SubjectId,
                 Username = tenantContext.Username,
                 TenantId = tenantContext.TenantId,
-                TenantAlias = tenantContext.TenantAlias,
+                IsPlatformAdmin = tenantContext.IsPlatformAdmin,
                 Roles = applicationIdentity.Roles
             }
         });

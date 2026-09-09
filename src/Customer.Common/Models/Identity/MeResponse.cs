@@ -8,7 +8,7 @@ public sealed class MeResponse
 
     public string? TenantId { get; set; }
 
-    public string? TenantAlias { get; set; }
+    public bool IsPlatformAdmin { get; set; }
 
     public IReadOnlyCollection<string> Roles { get; set; } = [];
 }

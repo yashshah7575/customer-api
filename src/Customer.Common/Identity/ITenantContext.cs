@@ -1,14 +1,12 @@
 namespace Customer.Common.Identity;
 
 /// <summary>
-/// Request-scoped tenant and subject identity derived from a validated access token.
-/// Never populated from client-supplied headers, routes, or request bodies.
+/// Request-scoped identity derived from a validated access token.
+/// Never populated from headers, routes, query strings, or request bodies.
 /// </summary>
 public interface ITenantContext
 {
     string? TenantId { get; }
-
-    string? TenantAlias { get; }
 
     string? SubjectId { get; }
 
@@ -16,7 +14,14 @@ public interface ITenantContext
 
     bool IsAuthenticated { get; }
 
+    bool IsPlatformAdmin { get; }
+
     TenantResolutionStatus TenantStatus { get; }
 
     bool HasValidTenant { get; }
+
+    /// <summary>
+    /// Platform administrators may operate without a tenant_id. Everyone else needs a valid one.
+    /// </summary>
+    bool CanAccessTenantData { get; }
 }

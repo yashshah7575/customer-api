@@ -21,6 +21,8 @@ public static class AuthenticationServiceExtensions
         services.Configure<AuthenticationOptions>(
             configuration.GetSection(AuthenticationOptions.SectionName));
 
+        var requireHttpsMetadata = authentication.RequireHttpsMetadata ?? !environment.IsDevelopment();
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -28,7 +30,7 @@ public static class AuthenticationServiceExtensions
                 options.MapInboundClaims = false;
                 options.Authority = authentication.Authority;
                 options.Audience = authentication.Audience;
-                options.RequireHttpsMetadata = !environment.IsDevelopment();
+                options.RequireHttpsMetadata = requireHttpsMetadata;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -40,35 +42,61 @@ public static class AuthenticationServiceExtensions
                     NameClaimType = "preferred_username",
                     RoleClaimType = "roles"
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("Customer.Api.Authentication");
+                        logger.LogWarning("Authentication failed: {FailureType}", context.Exception.GetType().Name);
+                        return Task.CompletedTask;
+                    },
+                    OnForbidden = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("Customer.Api.Authorization");
+                        logger.LogWarning(
+                            "Authorization failed for {Method} {Path}",
+                            context.Request.Method,
+                            context.Request.Path.Value);
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy(AuthorizationPolicies.CustomersRead, policy =>
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
+            options.AddPolicy(AuthorizationPolicies.CanReadCustomers, policy =>
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.CustomersRead));
                 policy.AddRequirements(new TenantContextRequirement());
             });
 
-            options.AddPolicy(AuthorizationPolicies.CustomersWrite, policy =>
+            options.AddPolicy(AuthorizationPolicies.CanManageCustomers, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.CustomersWrite));
+                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.CustomersManage));
                 policy.AddRequirements(new TenantContextRequirement());
             });
 
-            options.AddPolicy(AuthorizationPolicies.TenantManage, policy =>
+            options.AddPolicy(AuthorizationPolicies.CanDeleteCustomers, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.TenantManage));
+                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.CustomersDelete));
                 policy.AddRequirements(new TenantContextRequirement());
             });
 
-            options.AddPolicy(AuthorizationPolicies.PlatformManage, policy =>
+            options.AddPolicy(AuthorizationPolicies.PlatformAdministration, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.PlatformManage));
+                policy.AddRequirements(new PermissionRequirement(ApplicationPermissions.PlatformAdminister));
             });
         });
 

@@ -33,10 +33,10 @@ public class CustomerDbContext : DbContext
 
         customer.HasIndex(c => new { c.TenantId, c.Email }).IsUnique();
 
-        // Defense in depth: normal queries cannot see another tenant's rows.
+        // PlatformAdmin may see every tenant. Everyone else is limited to token tenant_id.
         // Find/FindAsync bypass this filter — repositories must not use them.
         customer.HasQueryFilter(c =>
-            _tenantContext.TenantId != null &&
-            c.TenantId == _tenantContext.TenantId);
+            _tenantContext.IsPlatformAdmin ||
+            (_tenantContext.TenantId != null && c.TenantId == _tenantContext.TenantId));
     }
 }

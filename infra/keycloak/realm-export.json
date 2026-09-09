@@ -1,0 +1,299 @@
+{
+  "id": "customer-api-demo",
+  "realm": "customer-api-demo",
+  "displayName": "Customer API Demo (LOCAL DEVELOPMENT / DEMONSTRATION ONLY)",
+  "enabled": true,
+  "organizationsEnabled": false,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "verifyEmail": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "client": {
+      "customer-api": [
+        {
+          "name": "PlatformAdmin",
+          "description": "Platform operator. Intentional cross-tenant access in the API."
+        },
+        {
+          "name": "CustomerAdmin",
+          "description": "Tenant administrator. Can read, write, and delete within one tenant."
+        },
+        {
+          "name": "Operator",
+          "description": "Tenant operator. Can read and write, but cannot delete."
+        },
+        {
+          "name": "Viewer",
+          "description": "Read-only tenant user."
+        },
+        {
+          "name": "ServiceClient",
+          "description": "Machine identity. Least-privilege read access; never PlatformAdmin."
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "customer-api",
+      "name": "Customer API",
+      "description": "Resource-server audience and application-role container. No login flows.",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": false
+    },
+    {
+      "clientId": "customer-api-swagger",
+      "name": "Customer API Swagger",
+      "description": "Public Authorization Code + PKCE client for local Swagger UI. No client secret.",
+      "enabled": true,
+      "publicClient": true,
+      "secret": "",
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "http://localhost:5080/swagger/oauth2-redirect.html",
+        "https://localhost:5080/swagger/oauth2-redirect.html",
+        "http://127.0.0.1:5080/swagger/oauth2-redirect.html",
+        "http://localhost:*/swagger/oauth2-redirect.html",
+        "https://localhost:*/swagger/oauth2-redirect.html"
+      ],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-customer-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "customer-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenant_id",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false"
+          }
+        },
+        {
+          "name": "application-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "usermodel.clientRoleMapping.clientId": "customer-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "customer-a-integration",
+      "name": "Customer A Integration",
+      "description": "Confidential Client Credentials client for Customer A. LOCAL DEVELOPMENT / DEMONSTRATION ONLY. Throwaway secret is not a production credential.",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "local-only-integration-secret",
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "roles"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-customer-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "customer-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "tenant_id",
+            "claim.value": "customer-a",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "access.tokenResponse.claim": "false"
+          }
+        },
+        {
+          "name": "application-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "usermodel.clientRoleMapping.clientId": "customer-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice-admin",
+      "enabled": true,
+      "email": "alice-admin@customer-a.example",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Admin",
+      "attributes": {
+        "tenant_id": ["customer-a"]
+      },
+      "credentials": [
+        { "type": "password", "value": "DevPassword123!", "temporary": false }
+      ],
+      "clientRoles": {
+        "customer-api": ["CustomerAdmin"]
+      }
+    },
+    {
+      "username": "alice-operator",
+      "enabled": true,
+      "email": "alice-operator@customer-a.example",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Operator",
+      "attributes": {
+        "tenant_id": ["customer-a"]
+      },
+      "credentials": [
+        { "type": "password", "value": "DevPassword123!", "temporary": false }
+      ],
+      "clientRoles": {
+        "customer-api": ["Operator"]
+      }
+    },
+    {
+      "username": "bob-admin",
+      "enabled": true,
+      "email": "bob-admin@customer-b.example",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Admin",
+      "attributes": {
+        "tenant_id": ["customer-b"]
+      },
+      "credentials": [
+        { "type": "password", "value": "DevPassword123!", "temporary": false }
+      ],
+      "clientRoles": {
+        "customer-api": ["CustomerAdmin"]
+      }
+    },
+    {
+      "username": "bob-viewer",
+      "enabled": true,
+      "email": "bob-viewer@customer-b.example",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Viewer",
+      "attributes": {
+        "tenant_id": ["customer-b"]
+      },
+      "credentials": [
+        { "type": "password", "value": "DevPassword123!", "temporary": false }
+      ],
+      "clientRoles": {
+        "customer-api": ["Viewer"]
+      }
+    },
+    {
+      "username": "platform-admin",
+      "enabled": true,
+      "email": "platform-admin@customer-api-demo.example",
+      "emailVerified": true,
+      "firstName": "Pat",
+      "lastName": "Platform",
+      "credentials": [
+        { "type": "password", "value": "DevPassword123!", "temporary": false }
+      ],
+      "clientRoles": {
+        "customer-api": ["PlatformAdmin"]
+      }
+    },
+    {
+      "username": "service-account-customer-a-integration",
+      "enabled": true,
+      "serviceAccountClientId": "customer-a-integration",
+      "clientRoles": {
+        "customer-api": ["ServiceClient"]
+      }
+    }
+  ]
+}

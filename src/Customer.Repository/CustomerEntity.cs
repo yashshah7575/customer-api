@@ -5,7 +5,7 @@ public class CustomerEntity
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Keycloak organization ID. Always assigned by the server from ITenantContext.
+    /// Assigned by the server from the authenticated tenant context.
     /// </summary>
     public string TenantId { get; set; } = default!;
 

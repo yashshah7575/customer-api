@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Customer.Common;
 using Customer.Common.Models.Customer;
+using Customer.Common.Tenancy;
 using FluentAssertions;
 
 namespace Customer.Api.Integration.Tests;
@@ -15,7 +16,7 @@ public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
     {
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", TestJwtIssuer.AcmeEditor());
+            new AuthenticationHeaderValue("Bearer", TestJwtIssuer.AliceAdmin());
     }
 
     [Fact]
@@ -25,7 +26,7 @@ public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
         {
             FirstName = "NUnit",
             LastName = "User",
-            Email = $"nunit-{Guid.NewGuid():N}@acme.example",
+            Email = $"nunit-{Guid.NewGuid():N}@customer-a.example",
             PhoneNumber = "1234567890"
         };
 
@@ -33,9 +34,8 @@ public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<ApiResponseData<CustomerResponse>>();
-        result!.Data.FirstName.Should().Be("NUnit User".Split(' ')[0]);
-        result.Data.FirstName.Should().Be("NUnit");
-        result.Data.TenantId.Should().Be(Customer.Common.Tenancy.DemoTenants.AcmeBankId);
+        result!.Data.FirstName.Should().Be("NUnit");
+        result.Data.TenantId.Should().Be(DemoTenants.CustomerA);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
         {
             FirstName = "Test",
             LastName = "Fetch",
-            Email = $"fetch-{Guid.NewGuid():N}@acme.example",
+            Email = $"fetch-{Guid.NewGuid():N}@customer-a.example",
             PhoneNumber = "5555555555"
         };
 
@@ -65,7 +65,7 @@ public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
         {
             FirstName = "To",
             LastName = "Delete",
-            Email = $"delete-{Guid.NewGuid():N}@acme.example",
+            Email = $"delete-{Guid.NewGuid():N}@customer-a.example",
             PhoneNumber = "9999999999"
         };
 

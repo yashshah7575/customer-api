@@ -1,0 +1,62 @@
+# This manifest demonstrates deployment concepts for the Customer API.
+# It is not a complete production Keycloak HA topology, ingress, or cluster design.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-api
+  labels:
+    app: customer-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-api
+  template:
+    metadata:
+      labels:
+        app: customer-api
+    spec:
+      containers:
+        - name: customer-api
+          image: customer-api:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://+:8080
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: Authentication__Authority
+              value: https://keycloak.example.internal/realms/customer-api-demo
+            - name: Authentication__Audience
+              value: customer-api
+            - name: Authentication__RequireHttpsMetadata
+              value: "true"
+            # Resource-server JWT validation does not need a client secret.
+            # If a confidential client is added later, reference a Secret instead of embedding a value:
+            # - name: SOME_CLIENT_SECRET
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: customer-api
+            #       key: client-secret
+          readinessProbe:
+            httpGet:
+              path: /api/system/ping
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/system/ping
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

@@ -16,8 +16,7 @@ public class CustomerServiceTests
     private readonly Mock<ILogger<CustomerService>> _logger = new();
     private readonly TenantContext _tenantContext = new()
     {
-        TenantId = DemoTenants.AcmeBankId,
-        TenantAlias = DemoTenants.AcmeBankAlias,
+        TenantId = DemoTenants.CustomerA,
         TenantStatus = TenantResolutionStatus.Valid,
         IsAuthenticated = true
     };
@@ -40,7 +39,7 @@ public class CustomerServiceTests
             PhoneNumber = "123456"
         };
 
-        _repo.Setup(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.AcmeBankId)))
+        _repo.Setup(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.CustomerA)))
             .ReturnsAsync((CustomerEntity customer) =>
             {
                 customer.Id = Guid.NewGuid();
@@ -50,8 +49,26 @@ public class CustomerServiceTests
         var result = await _customerService.AddAsync(req);
 
         result.Email.Should().Be(req.Email);
-        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
-        _repo.Verify(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.AcmeBankId)), Times.Once);
+        result.TenantId.Should().Be(DemoTenants.CustomerA);
+        _repo.Verify(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.CustomerA)), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddAsync_WithoutTenant_Throws()
+    {
+        _tenantContext.TenantId = null;
+        _tenantContext.TenantStatus = TenantResolutionStatus.None;
+        _tenantContext.IsPlatformAdmin = true;
+
+        var act = async () => await _customerService.AddAsync(new CreateCustomerRequest
+        {
+            FirstName = "Pat",
+            LastName = "Platform",
+            Email = "pat@platform.example",
+            PhoneNumber = "1"
+        });
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -84,7 +101,7 @@ public class CustomerServiceTests
             new()
             {
                 Id = Guid.NewGuid(),
-                TenantId = DemoTenants.AcmeBankId,
+                TenantId = DemoTenants.CustomerA,
                 FirstName = "A",
                 LastName = "B",
                 Email = "a@acme.example",
@@ -96,7 +113,7 @@ public class CustomerServiceTests
 
         var result = await _customerService.GetAllAsync();
 
-        result.Should().ContainSingle(customer => customer.Id == entities[0].Id && customer.TenantId == DemoTenants.AcmeBankId);
+        result.Should().ContainSingle(customer => customer.Id == entities[0].Id && customer.TenantId == DemoTenants.CustomerA);
     }
 
     [Fact]
@@ -106,7 +123,7 @@ public class CustomerServiceTests
         var ent = new CustomerEntity
         {
             Id = id,
-            TenantId = DemoTenants.AcmeBankId,
+            TenantId = DemoTenants.CustomerA,
             FirstName = "Jane",
             LastName = "Doe",
             Email = "jane@acme.example",
@@ -119,7 +136,7 @@ public class CustomerServiceTests
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(id);
-        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
+        result.TenantId.Should().Be(DemoTenants.CustomerA);
     }
 
     [Fact]

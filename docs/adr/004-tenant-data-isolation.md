@@ -2,18 +2,17 @@
 
 ## Context
 
-Customer rows from Acme Bank and Contoso Finance share one application database (InMemory in this demo). A missed `Where(c => c.TenantId == current)` is an IDOR.
+Customer rows from Customer A and Customer B share one application database (InMemory in this demo). A missed `Where(c => c.TenantId == current)` is an IDOR.
 
 EF Core `Find` / `FindAsync` load by primary key and **bypass** global query filters. That is a silent cross-tenant leak if a GUID is guessed or leaked.
 
 ## Decision
 
 1. Require `TenantId` on `CustomerEntity`.
-2. Apply a global query filter: current tenant only.
+2. Apply a global query filter: current tenant, unless `PlatformAdmin`.
 3. Set `TenantId` on create from `ITenantContext`, never from the client.
 4. Query by id with LINQ so the filter applies.
 5. Return 404 for cross-tenant ids.
-6. Keep platform operations on separate endpoints that do not query tenant customers.
 
 ## Alternatives considered
 
@@ -26,5 +25,5 @@ EF Core `Find` / `FindAsync` load by primary key and **bypass** global query fil
 ## Consequences
 
 - Developers cannot "just Find by id" without breaking isolation; the repository does not expose `Find`.
-- Tests prove Acme cannot read Contoso by id.
+- Tests prove Customer A cannot read Customer B by id, and PlatformAdmin can.
 - InMemory demonstrates the pattern; production should add a real database and still keep the filter.
