@@ -1,129 +1,118 @@
 ﻿using Customer.Api.Controllers;
+using Customer.Common;
 using Customer.Common.Models.Customer;
 using Customer.Service.Interface;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace Customer.Api.Tests.Controllers
+namespace Customer.Api.Tests.Controllers;
+
+public class CustomersControllerTests
 {
-    public class CustomersControllerTests
+    private readonly Mock<ICustomerService> _customerServiceMock = new();
+    private readonly CustomersController _controller;
+
+    public CustomersControllerTests()
     {
-        private Mock<ICustomerService> _customerServiceMock;
-        private CustomersController _controller;
+        _controller = new CustomersController(_customerServiceMock.Object);
+    }
 
-        [SetUp]
-        public void SetUp()
+    [Fact]
+    public async Task GetCustomer_ShouldReturnAllCustomers()
+    {
+        var mockCustomerData = new List<CustomerResponse>
         {
-            _customerServiceMock = new Mock<ICustomerService>();
-            _controller = new CustomersController(_customerServiceMock.Object);
-        }
+            new() { Id = Guid.NewGuid(), FirstName = "John" },
+            new() { Id = Guid.NewGuid(), FirstName = "Jane" }
+        };
 
-        [Test]
-        public async Task GetCustomer_ShouldReturnAllCustomers()
+        _customerServiceMock
+            .Setup(s => s.GetAllAsync())
+            .ReturnsAsync(mockCustomerData);
+
+        var result = await _controller.GetCustomer();
+
+        Unwrap(result).Data.Should().BeEquivalentTo(mockCustomerData);
+    }
+
+    [Fact]
+    public async Task GetCustomerById_ShouldReturnCustomer_WhenFound()
+    {
+        var customerId = Guid.NewGuid();
+        var mockCustomerData = new CustomerResponse
         {
-            // Arrange
-            var mockCustomerData = new List<CustomerResponse>
-            {
-                new() { Id = Guid.NewGuid(), FirstName = "John" },
-                new() { Id = Guid.NewGuid(), FirstName = "Jane" }
-            };
+            Id = customerId,
+            FirstName = "John"
+        };
 
-            _customerServiceMock
-                .Setup(s => s.GetAllAsync())
-                .ReturnsAsync(mockCustomerData);
+        _customerServiceMock
+            .Setup(s => s.GetByIdAsync(customerId))
+            .ReturnsAsync(mockCustomerData);
 
-            // Act
-            var result = await _controller.GetCustomer();
+        var result = await _controller.GetCustomerById(customerId);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.Data.Should().BeEquivalentTo(mockCustomerData);
-        }
+        Unwrap(result).Data.Should().BeEquivalentTo(mockCustomerData);
+    }
 
-        [Test]
-        public async Task GetCustomerById_ShouldReturnCustomer_WhenFound()
+    [Fact]
+    public async Task AddCustomer_ShouldReturnCreatedCustomer()
+    {
+        var request = new CreateCustomerRequest
         {
-            // Arrange
-            var customerId = Guid.NewGuid();
-            var mockCustomerData = new CustomerResponse
-            {
-                Id = customerId,
-                FirstName = "John"
-            };
+            FirstName = "fname"
+        };
 
-            _customerServiceMock
-                .Setup(s => s.GetByIdAsync(customerId))
-                .ReturnsAsync(mockCustomerData);
-
-            // Act
-            var result = await _controller.GetCustomerById(customerId);
-
-            // Assert
-            result.Data.Should().BeEquivalentTo(mockCustomerData);
-        }
-
-        [Test]
-        public async Task AddCustomer_ShouldReturnCreatedCustomer()
+        var createdCustomer = new CustomerResponse
         {
-            // Arrange
-            var request = new CreateCustomerRequest
-            {
-                FirstName = "fname"
-            };
+            Id = Guid.NewGuid(),
+            FirstName = "fname"
+        };
 
-            var createdCustomer = new CustomerResponse
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "fname"
-            };
+        _customerServiceMock
+            .Setup(s => s.AddAsync(request))
+            .ReturnsAsync(createdCustomer);
 
-            _customerServiceMock
-                .Setup(s => s.AddAsync(request))
-                .ReturnsAsync(createdCustomer);
+        var result = await _controller.AddCustomer(request);
 
-            // Act
-            var result = await _controller.AddCustomer(request);
+        Unwrap(result).Data.Should().BeEquivalentTo(createdCustomer);
+    }
 
-            // Assert
-            result.Data.Should().BeEquivalentTo(createdCustomer);
-        }
-
-        [Test]
-        public async Task EditCustomer_ShouldReturnTrue_WhenSuccessful()
+    [Fact]
+    public async Task EditCustomer_ShouldReturnTrue_WhenSuccessful()
+    {
+        var customerId = Guid.NewGuid();
+        var updateRequest = new UpdateCustomerRequest
         {
-            // Arrange
-            var customerId = Guid.NewGuid();
-            var updateRequest = new UpdateCustomerRequest
-            {
-                FirstName = "UpdatedName"
-            };
+            FirstName = "UpdatedName"
+        };
 
-            _customerServiceMock
-                .Setup(s => s.UpdateAsync(updateRequest, customerId))
-                .ReturnsAsync(true);
+        _customerServiceMock
+            .Setup(s => s.UpdateAsync(updateRequest, customerId))
+            .ReturnsAsync(true);
 
-            // Act
-            var result = await _controller.EditCustomer(updateRequest, customerId);
+        var result = await _controller.EditCustomer(updateRequest, customerId);
 
-            // Assert
-            result.Data.Should().BeTrue();
-        }
+        Unwrap(result).Data.Should().BeTrue();
+    }
 
-        [Test]
-        public async Task DeleteCustomer_ShouldReturnTrue_WhenSuccessful()
-        {
-            // Arrange
-            var customerId = Guid.NewGuid();
+    [Fact]
+    public async Task DeleteCustomer_ShouldReturnTrue_WhenSuccessful()
+    {
+        var customerId = Guid.NewGuid();
 
-            _customerServiceMock
-                .Setup(s => s.DeleteAsync(customerId))
-                .ReturnsAsync(true);
+        _customerServiceMock
+            .Setup(s => s.DeleteAsync(customerId))
+            .ReturnsAsync(true);
 
-            // Act
-            var result = await _controller.DeleteCustomer(customerId);
+        var result = await _controller.DeleteCustomer(customerId);
 
-            // Assert
-            result.Data.Should().BeTrue();
-        }
+        Unwrap(result).Data.Should().BeTrue();
+    }
+
+    private static ApiResponseData<T> Unwrap<T>(ActionResult<ApiResponseData<T>> result)
+    {
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        return ok.Value.Should().BeOfType<ApiResponseData<T>>().Subject;
     }
 }

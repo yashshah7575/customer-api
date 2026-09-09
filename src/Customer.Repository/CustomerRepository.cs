@@ -1,53 +1,62 @@
 ﻿using Customer.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace Customer.Repository
+namespace Customer.Repository;
+
+public class CustomerRepository : ICustomerRepository
 {
-    public class CustomerRepository : ICustomerRepository
+    private readonly CustomerDbContext _dbContext;
+
+    public CustomerRepository(CustomerDbContext dbContext)
     {
-        private readonly CustomerDbContext _dbContext;
+        _dbContext = dbContext;
+    }
 
-        public CustomerRepository(CustomerDbContext dbContext)
+    public async Task<CustomerEntity?> GetByIdAsync(Guid id)
+    {
+        return await _dbContext.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(customer => customer.Id == id);
+    }
+
+    public async Task<IEnumerable<CustomerEntity>> GetAllAsync()
+    {
+        return await _dbContext.Customers
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<CustomerEntity> AddAsync(CustomerEntity customer)
+    {
+        if (customer.Id == Guid.Empty)
         {
-            _dbContext = dbContext;
+            customer.Id = Guid.NewGuid();
         }
 
-        public async Task<CustomerEntity?> GetByIdAsync(Guid id)
+        _dbContext.Customers.Add(customer);
+        await _dbContext.SaveChangesAsync();
+        return customer;
+    }
+
+    public async Task<bool> UpdateAsync(CustomerEntity customer)
+    {
+        _dbContext.Customers.Update(customer);
+        var result = await _dbContext.SaveChangesAsync();
+        return result > 0;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var customer = await _dbContext.Customers
+            .FirstOrDefaultAsync(entity => entity.Id == id);
+
+        if (customer is null)
         {
-            return await _dbContext.Customers.FindAsync(id);
+            return false;
         }
 
-        public async Task<IEnumerable<CustomerEntity>> GetAllAsync()
-        {
-            return await _dbContext.Customers.ToListAsync();
-        }
-
-        public async Task<CustomerEntity>
-            AddAsync(CustomerEntity customer)
-        {
-            customer.Id = Guid.NewGuid(); // ensure UUID is generated
-            _dbContext.Customers.Add(customer);
-            await _dbContext.SaveChangesAsync();
-            return customer;
-        }
-
-        public async Task<bool> UpdateAsync(CustomerEntity customer)
-        {
-            _dbContext.Customers.Update(customer);
-            var result = await _dbContext.SaveChangesAsync();
-            return result > 0;
-        }
-
-        public async Task<bool> DeleteAsync(Guid id)
-        {
-            var customer = await _dbContext.Customers.FindAsync(id);
-            if (customer == null)
-            {
-                return false;
-            }
-            _dbContext.Customers.Remove(customer);
-            await _dbContext.SaveChangesAsync();
-            return true;
-        }
+        _dbContext.Customers.Remove(customer);
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 }

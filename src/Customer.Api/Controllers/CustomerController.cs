@@ -1,75 +1,76 @@
-﻿using Customer.Common;
+﻿using Customer.Api.Authentication;
+using Customer.Common;
+using Customer.Common.Authorization;
 using Customer.Common.Models.Customer;
 using Customer.Service.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Customer.Api.Controllers
+namespace Customer.Api.Controllers;
+
+[ApiController]
+[Produces("application/json")]
+[Route("api/customers")]
+[RequireTenant]
+public class CustomersController : ControllerBase
 {
-    [ApiController]
-    [Produces("application/json")]
-    [Route("api/customers")]
-    public class CustomersController : ControllerBase
+    private readonly ICustomerService _customerService;
+
+    public CustomersController(ICustomerService customerService)
     {
-        private ICustomerService _customerService;
+        _customerService = customerService;
+    }
 
-        public CustomersController(ICustomerService customerService)
+    [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.CustomersRead)]
+    public async Task<ActionResult<ApiResponseData<IEnumerable<CustomerResponse>?>>> GetCustomer()
+    {
+        return Ok(new ApiResponseData<IEnumerable<CustomerResponse>?>
         {
-            _customerService = customerService;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        public async Task<ApiResponseData<IEnumerable<CustomerResponse>?>> GetCustomer()
-        {
-            return new ApiResponseData<IEnumerable<CustomerResponse>?>
-            {
-                Data = await _customerService.GetAllAsync()
-            };
-        }
+            Data = await _customerService.GetAllAsync()
+        });
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpGet("{id}")]
-        public async Task<ApiResponseData<CustomerResponse?>> GetCustomerById(Guid id)
+    [HttpGet("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.CustomersRead)]
+    public async Task<ActionResult<ApiResponseData<CustomerResponse?>>> GetCustomerById(Guid id)
+    {
+        return Ok(new ApiResponseData<CustomerResponse?>
         {
-            return new ApiResponseData<CustomerResponse?>
-            {
-                Data = await _customerService.GetByIdAsync(id)
-            };
-        }
+            Data = await _customerService.GetByIdAsync(id)
+        });
+    }
 
-        [HttpPost]
-        public async Task<ApiResponseData<CustomerResponse>>
-                AddCustomer([FromBody] CreateCustomerRequest customer)
+    [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    public async Task<ActionResult<ApiResponseData<CustomerResponse>>> AddCustomer(
+        [FromBody] CreateCustomerRequest customer)
+    {
+        return Ok(new ApiResponseData<CustomerResponse>
         {
-            return new ApiResponseData<CustomerResponse>
-            {
-                Data = await _customerService.AddAsync(customer)
-            };
-        }
+            Data = await _customerService.AddAsync(customer)
+        });
+    }
 
-        [HttpPut("{id}")]
-        public async Task<ApiResponseData<bool>> EditCustomer
-            ([FromBody] UpdateCustomerRequest customer, [FromRoute] Guid id)
+    [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    public async Task<ActionResult<ApiResponseData<bool>>> EditCustomer(
+        [FromBody] UpdateCustomerRequest customer,
+        [FromRoute] Guid id)
+    {
+        return Ok(new ApiResponseData<bool>
         {
-            return new ApiResponseData<bool>
-            {
-                Data = await _customerService.UpdateAsync(customer, id)
-            };
-        }
+            Data = await _customerService.UpdateAsync(customer, id)
+        });
+    }
 
-        [HttpDelete("{id}")]
-        public async Task<ApiResponseData<bool>> DeleteCustomer(Guid id)
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.CustomersWrite)]
+    public async Task<ActionResult<ApiResponseData<bool>>> DeleteCustomer(Guid id)
+    {
+        return Ok(new ApiResponseData<bool>
         {
-            return new ApiResponseData<bool>
-            {
-                Data = await _customerService.DeleteAsync(id)
-            };
-        }
+            Data = await _customerService.DeleteAsync(id)
+        });
     }
 }

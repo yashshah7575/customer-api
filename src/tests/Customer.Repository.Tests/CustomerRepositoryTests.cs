@@ -1,135 +1,163 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Customer.Common.Identity;
+using Customer.Common.Tenancy;
+using Customer.Repository;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
-namespace Customer.Repository.Tests
+namespace Customer.Repository.Tests;
+
+public class CustomerRepositoryTests : IDisposable
 {
-    [TestFixture]
-    public class CustomerRepositoryTests
+    private readonly TenantContext _tenantContext = new()
     {
-        private CustomerDbContext _context;
-        private CustomerRepository _repository;
+        TenantId = DemoTenants.AcmeBankId,
+        TenantAlias = DemoTenants.AcmeBankAlias,
+        TenantStatus = TenantResolutionStatus.Valid,
+        IsAuthenticated = true
+    };
 
-        [SetUp]
-        public void Setup()
-        {
-            var options = new DbContextOptionsBuilder<CustomerDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Unique DB per test
-                .Options;
-            _context = new CustomerDbContext(options);
-            _repository = new CustomerRepository(_context);
-        }
+    private readonly CustomerDbContext _context;
+    private readonly CustomerRepository _repository;
 
-        [TearDown]
-        public void Teardown()
-        {
-            _context.Dispose();
-        }
+    public CustomerRepositoryTests()
+    {
+        var options = new DbContextOptionsBuilder<CustomerDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
 
-        [Test]
-        public async Task AddAsync_ShouldAddCustomer()
-        {
-            var customer = new CustomerEntity
-            {
-                FirstName = "John",
-                LastName = "Doe",
-                Email = "john@example.com",
-                PhoneNumber = "123456"
-            };
-
-            var result = await _repository.AddAsync(customer);
-
-            Assert.IsNotNull(result);
-            Assert.AreNotEqual(Guid.Empty, result.Id);
-
-            var dbCustomer = await _context.Customers.FindAsync(result.Id);
-            Assert.IsNotNull(dbCustomer);
-            Assert.AreEqual("John", dbCustomer.FirstName);
-        }
-
-        [Test]
-        public async Task GetByIdAsync_ShouldReturnCustomer_WhenExists()
-        {
-            var customer = new CustomerEntity
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Jane",
-                LastName = "Smith",
-                Email = "jane@example.com",
-                PhoneNumber = "1234"
-            };
-
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-
-            var result = await _repository.GetByIdAsync(customer.Id);
-
-            Assert.IsNotNull(result);
-            Assert.AreEqual("Jane", result!.FirstName);
-        }
-
-        [Test]
-        public async Task GetByIdAsync_ShouldReturnNull_WhenNotExists()
-        {
-            var result = await _repository.GetByIdAsync(Guid.NewGuid());
-
-            Assert.IsNull(result);
-        }
-
-        [Test]
-        public async Task GetAllAsync_ShouldReturnAllCustomers()
-        {
-            var customer1 = new CustomerEntity { FirstName = "A", LastName = "A", Email = "a@a.com", PhoneNumber = "123" };
-            var customer2 = new CustomerEntity { FirstName = "B", LastName = "B", Email = "b@b.com", PhoneNumber = "567" };
-
-            _context.Customers.AddRange(customer1, customer2);
-            await _context.SaveChangesAsync();
-
-            var result = await _repository.GetAllAsync();
-
-            Assert.AreEqual(2, result.Count());
-        }
-
-        [Test]
-        public async Task UpdateAsync_ShouldModifyCustomer()
-        {
-            var customer = new CustomerEntity { FirstName = "fname", Email = "edit@me.com", LastName = "lname", PhoneNumber = "123" };
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-
-            customer.FirstName = "New";
-            var result = await _repository.UpdateAsync(customer);
-
-            Assert.IsTrue(result);
-
-            var dbCustomer = await _context.Customers.FindAsync(customer.Id);
-            Assert.AreEqual("New", dbCustomer!.FirstName);
-        }
-
-        [Test]
-        public async Task DeleteAsync_ShouldRemoveCustomer_WhenExists()
-        {
-            var customer = new CustomerEntity
-            {
-                FirstName = "Del",
-                LastName = "lname",
-                Email = "del@me.com",
-                PhoneNumber = "123"
-            };
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-
-            var result = await _repository.DeleteAsync(customer.Id);
-
-            Assert.IsTrue(result);
-            var dbCustomer = await _context.Customers.FindAsync(customer.Id);
-            Assert.IsNull(dbCustomer);
-        }
-
-        [Test]
-        public async Task DeleteAsync_ShouldReturnFalse_WhenNotExists()
-        {
-            var result = await _repository.DeleteAsync(Guid.NewGuid());
-
-            Assert.IsFalse(result);
-        }
+        _context = new CustomerDbContext(options, _tenantContext);
+        _repository = new CustomerRepository(_context);
     }
+
+    public void Dispose() => _context.Dispose();
+
+    [Fact]
+    public async Task AddAsync_ShouldAddCustomer()
+    {
+        var customer = CreateCustomer("John", "Doe", "john@acme.example");
+
+        var result = await _repository.AddAsync(customer);
+
+        result.Should().NotBeNull();
+        result.Id.Should().NotBe(Guid.Empty);
+        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
+
+        var dbCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == result.Id);
+        dbCustomer.Should().NotBeNull();
+        dbCustomer!.FirstName.Should().Be("John");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnCustomer_WhenExists()
+    {
+        var customer = CreateCustomer("Jane", "Smith", "jane@acme.example");
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetByIdAsync(customer.Id);
+
+        result.Should().NotBeNull();
+        result!.FirstName.Should().Be("Jane");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenNotExists()
+    {
+        var result = await _repository.GetByIdAsync(Guid.NewGuid());
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenCustomerBelongsToAnotherTenant()
+    {
+        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol@contoso.example", DemoTenants.ContosoFinanceId);
+        _context.Customers.Add(foreignCustomer);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetByIdAsync(foreignCustomer.Id);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnOnlyCurrentTenantCustomers()
+    {
+        _context.Customers.AddRange(
+            CreateCustomer("A", "A", "a@acme.example"),
+            CreateCustomer("B", "B", "b@acme.example"),
+            CreateCustomer("C", "C", "c@contoso.example", DemoTenants.ContosoFinanceId));
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetAllAsync();
+
+        result.Should().HaveCount(2);
+        result.Should().OnlyContain(customer => customer.TenantId == DemoTenants.AcmeBankId);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldModifyCustomer()
+    {
+        var customer = CreateCustomer("fname", "lname", "edit@acme.example");
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        customer.FirstName = "New";
+        var result = await _repository.UpdateAsync(customer);
+
+        result.Should().BeTrue();
+        var dbCustomer = await _context.Customers.FirstAsync(c => c.Id == customer.Id);
+        dbCustomer.FirstName.Should().Be("New");
+        dbCustomer.TenantId.Should().Be(DemoTenants.AcmeBankId);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldRemoveCustomer_WhenExists()
+    {
+        var customer = CreateCustomer("Del", "lname", "del@acme.example");
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.DeleteAsync(customer.Id);
+
+        result.Should().BeTrue();
+        (await _context.Customers.FirstOrDefaultAsync(c => c.Id == customer.Id)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnFalse_WhenNotExists()
+    {
+        var result = await _repository.DeleteAsync(Guid.NewGuid());
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnFalse_WhenCustomerBelongsToAnotherTenant()
+    {
+        var foreignCustomer = CreateCustomer("Carol", "Diaz", "carol-del@contoso.example", DemoTenants.ContosoFinanceId);
+        _context.Customers.Add(foreignCustomer);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.DeleteAsync(foreignCustomer.Id);
+
+        result.Should().BeFalse();
+        (await _context.Customers.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == foreignCustomer.Id))
+            .Should().NotBeNull();
+    }
+
+    private static CustomerEntity CreateCustomer(
+        string firstName,
+        string lastName,
+        string email,
+        string? tenantId = null) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId ?? DemoTenants.AcmeBankId,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = "123456"
+        };
 }

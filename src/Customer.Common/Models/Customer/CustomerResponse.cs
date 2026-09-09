@@ -4,6 +4,8 @@
     {
         public Guid Id { get; set; }
 
+        public string? TenantId { get; set; }
+
         public string FirstName { get; set; } = default!;
 
         public string? MiddleName { get; set; }

@@ -1,42 +1,42 @@
-﻿using System;
+﻿using Customer.Common.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Customer.Repository
+namespace Customer.Repository;
+
+public class CustomerDbContext : DbContext
 {
-	public class CustomerDbContext : DbContext
-	{
-        public DbSet<CustomerEntity> Customers { get; set; }
+    private readonly ITenantContext _tenantContext;
 
-        public CustomerDbContext(DbContextOptions<CustomerDbContext> options)
-            : base(options) { }
+    public DbSet<CustomerEntity> Customers { get; set; } = default!;
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<CustomerEntity>()
-                .HasKey(c => c.Id);
+    public CustomerDbContext(DbContextOptions<CustomerDbContext> options, ITenantContext tenantContext)
+        : base(options)
+    {
+        _tenantContext = tenantContext;
+    }
 
-            modelBuilder.Entity<CustomerEntity>()
-                .Property(c => c.FirstName).IsRequired();
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        var customer = modelBuilder.Entity<CustomerEntity>();
 
-            modelBuilder.Entity<CustomerEntity>()
-                .Property(c => c.LastName).IsRequired();
+        customer.HasKey(c => c.Id);
 
-            modelBuilder.Entity<CustomerEntity>()
-                .HasIndex(c => c.Email)
-                .IsUnique(); // Enforce unique constraint
+        customer.Property(c => c.TenantId).IsRequired();
+        customer.Property(c => c.FirstName).IsRequired();
+        customer.Property(c => c.LastName).IsRequired();
+        customer.Property(c => c.Email).IsRequired();
+        customer.Property(c => c.MiddleName).IsRequired(false);
+        customer.Property(c => c.CountryCode).IsRequired(false);
+        customer.Property(c => c.PhoneNumber)
+            .IsRequired()
+            .HasMaxLength(15);
 
-            modelBuilder.Entity<CustomerEntity>()
-                .Property(c => c.MiddleName)
-                .IsRequired(false); // Optional (nullable by default)
+        customer.HasIndex(c => new { c.TenantId, c.Email }).IsUnique();
 
-            modelBuilder.Entity<CustomerEntity>()
-                .Property(c => c.CountryCode)
-                .IsRequired(false); // Optional (nullable by default)
-
-            modelBuilder.Entity<CustomerEntity>()
-                .Property(c => c.PhoneNumber)
-                .IsRequired()         // Not null
-                .HasMaxLength(15);
-        }
+        // Defense in depth: normal queries cannot see another tenant's rows.
+        // Find/FindAsync bypass this filter — repositories must not use them.
+        customer.HasQueryFilter(c =>
+            _tenantContext.TenantId != null &&
+            c.TenantId == _tenantContext.TenantId);
     }
 }

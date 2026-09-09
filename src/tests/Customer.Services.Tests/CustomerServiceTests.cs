@@ -1,127 +1,146 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using Customer.Common.Identity;
 using Customer.Common.Models.Customer;
+using Customer.Common.Tenancy;
 using Customer.Repository;
 using Customer.Repository.Interface;
 using Customer.Service;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework;
 
-namespace Customer.Service.Tests
+namespace Customer.Service.Tests;
+
+public class CustomerServiceTests
 {
-    [TestFixture]
-    public class CustomerServiceTests
+    private readonly Mock<ICustomerRepository> _repo = new();
+    private readonly Mock<ILogger<CustomerService>> _logger = new();
+    private readonly TenantContext _tenantContext = new()
     {
-        private Mock<ICustomerRepository> _repo;
-        private Mock<IMapper> _mapper;
-        private Mock<ILogger<CustomerService>> _logger;
-        private CustomerService _customerService;
+        TenantId = DemoTenants.AcmeBankId,
+        TenantAlias = DemoTenants.AcmeBankAlias,
+        TenantStatus = TenantResolutionStatus.Valid,
+        IsAuthenticated = true
+    };
 
-        [SetUp]
-        public void SetUp()
+    private readonly CustomerService _customerService;
+
+    public CustomerServiceTests()
+    {
+        _customerService = new CustomerService(_repo.Object, _tenantContext, _logger.Object);
+    }
+
+    [Fact]
+    public async Task AddAsync_ValidRequest_AssignsTenantIdFromContext()
+    {
+        var req = new CreateCustomerRequest
         {
-            _repo = new Mock<ICustomerRepository>();
-            _mapper = new Mock<IMapper>();
-            _logger = new Mock<ILogger<CustomerService>>();
-            _customerService = new CustomerService(_repo.Object, _mapper.Object, _logger.Object);
-        }
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "john@acme.example",
+            PhoneNumber = "123456"
+        };
 
-        [Test]
-        public async Task AddAsync_ValidRequest_ReturnsMappedResponse()
+        _repo.Setup(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.AcmeBankId)))
+            .ReturnsAsync((CustomerEntity customer) =>
+            {
+                customer.Id = Guid.NewGuid();
+                return customer;
+            });
+
+        var result = await _customerService.AddAsync(req);
+
+        result.Email.Should().Be(req.Email);
+        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
+        _repo.Verify(r => r.AddAsync(It.Is<CustomerEntity>(c => c.TenantId == DemoTenants.AcmeBankId)), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddAsync_WhenRepositoryThrows_Rethrows()
+    {
+        var req = new CreateCustomerRequest { Email = "boom@acme.example", FirstName = "A", LastName = "B", PhoneNumber = "1" };
+        _repo.Setup(r => r.AddAsync(It.IsAny<CustomerEntity>())).ThrowsAsync(new InvalidOperationException());
+
+        var act = async () => await _customerService.AddAsync(req);
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ForwardsReturnValue()
+    {
+        var id = Guid.NewGuid();
+        _repo.Setup(r => r.DeleteAsync(id)).ReturnsAsync(true);
+
+        var result = await _customerService.DeleteAsync(id);
+
+        result.Should().BeTrue();
+        _repo.Verify(r => r.DeleteAsync(id), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsMappedCollection()
+    {
+        var entities = new List<CustomerEntity>
         {
-            // Arrange
-            var req = new CreateCustomerRequest { Email = "john@contoso.com" };
-            var ent = new CustomerEntity { Email = req.Email, Id = Guid.NewGuid() };
-            var resp = new CustomerResponse { Email = req.Email, Id = ent.Id };
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TenantId = DemoTenants.AcmeBankId,
+                FirstName = "A",
+                LastName = "B",
+                Email = "a@acme.example",
+                PhoneNumber = "1"
+            }
+        };
 
-            _mapper.Setup(m => m.Map<CustomerEntity>(req)).Returns(ent);
-            _repo.Setup(r => r.AddAsync(ent)).ReturnsAsync(ent);
-            _mapper.Setup(m => m.Map<CustomerResponse>(ent)).Returns(resp);
+        _repo.Setup(r => r.GetAllAsync()).ReturnsAsync(entities);
 
-            // Act
-            var result = await _customerService.AddAsync(req);
+        var result = await _customerService.GetAllAsync();
 
-            // Assert
-            result.Should().BeEquivalentTo(resp);
-            _repo.Verify(r => r.AddAsync(ent), Times.Once);
-        }
+        result.Should().ContainSingle(customer => customer.Id == entities[0].Id && customer.TenantId == DemoTenants.AcmeBankId);
+    }
 
-        [Test]
-        public void AddAsync_WhenRepositoryThrows_Rethrows()
+    [Fact]
+    public async Task GetByIdAsync_WhenFound_ReturnsMappedCustomer()
+    {
+        var id = Guid.NewGuid();
+        var ent = new CustomerEntity
         {
-            var req = new CreateCustomerRequest { Email = "boom@contoso.com" };
-            _mapper.Setup(m => m.Map<CustomerEntity>(req)).Returns(new CustomerEntity());
-            _repo.Setup(r => r.AddAsync(It.IsAny<CustomerEntity>())).ThrowsAsync(new InvalidOperationException());
+            Id = id,
+            TenantId = DemoTenants.AcmeBankId,
+            FirstName = "Jane",
+            LastName = "Doe",
+            Email = "jane@acme.example",
+            PhoneNumber = "1"
+        };
 
-            Func<Task> act = async () => await _customerService.AddAsync(req);
-            act.Should().ThrowAsync<InvalidOperationException>();
-        }
+        _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(ent);
 
-        [Test]
-        public async Task DeleteAsync_ForwardsReturnValue()
-        {
-            var id = Guid.NewGuid();
-            _repo.Setup(r => r.DeleteAsync(id)).ReturnsAsync(true);
+        var result = await _customerService.GetByIdAsync(id);
 
-            var result = await _customerService.DeleteAsync(id);
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(id);
+        result.TenantId.Should().Be(DemoTenants.AcmeBankId);
+    }
 
-            result.Should().BeTrue();
-            _repo.Verify(r => r.DeleteAsync(id), Times.Once);
-        }
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ThrowsKeyNotFoundException()
+    {
+        var id = Guid.NewGuid();
+        _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((CustomerEntity?)null);
 
-        [Test]
-        public async Task GetAllAsync_ReturnsMappedCollection()
-        {
-            var entities = new List<CustomerEntity> { new() { Id = Guid.NewGuid() } };
-            var dtos = new List<CustomerResponse> { new() { Id = entities[0].Id } };
+        var act = async () => await _customerService.GetByIdAsync(id);
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Customer with id: {id} does not exist*");
+    }
 
-            _repo.Setup(r => r.GetAllAsync()).ReturnsAsync(entities);
-            _mapper.Setup(m => m.Map<IEnumerable<CustomerResponse>>(entities)).Returns(dtos);
+    [Fact]
+    public async Task UpdateAsync_WhenCustomerNotFound_ThrowsKeyNotFoundException()
+    {
+        var id = Guid.NewGuid();
+        _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((CustomerEntity?)null);
 
-            var result = await _customerService.GetAllAsync();
-
-            result.Should().BeEquivalentTo(dtos);
-        }
-
-        [Test]
-        public async Task GetByIdAsync_WhenFound_ReturnsMappedCustomer()
-        {
-            var id = Guid.NewGuid();
-            var ent = new CustomerEntity { Id = id };
-            var dto = new CustomerResponse { Id = id };
-
-            _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(ent);
-            _mapper.Setup(m => m.Map<CustomerResponse>(ent)).Returns(dto);
-
-            var result = await _customerService.GetByIdAsync(id);
-
-            result.Should().BeEquivalentTo(dto);
-        }
-
-        [Test]
-        public void GetByIdAsync_WhenNotFound_ThrowsKeyNotFoundException()
-        {
-            var id = Guid.NewGuid();
-            _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((CustomerEntity?)null);
-
-            Func<Task> act = async () => await _customerService.GetByIdAsync(id);
-            act.Should().ThrowAsync<KeyNotFoundException>()
-               .WithMessage($"Customer with id: {id} does not exist*");
-        }
-
-        [Test]
-        public void UpdateAsync_WhenCustomerNotFound_ThrowsKeyNotFoundException()
-        {
-            var id = Guid.NewGuid();
-            _repo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((CustomerEntity?)null);
-
-            Func<Task> act = async () => await _customerService.UpdateAsync(new UpdateCustomerRequest(), id);
-            act.Should().ThrowAsync<KeyNotFoundException>()
-               .WithMessage($"Customer with id: {id} does not exist to update");
-        }
+        var act = async () => await _customerService.UpdateAsync(new UpdateCustomerRequest(), id);
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Customer with id: {id} does not exist to update");
     }
 }

@@ -1,85 +1,78 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Customer.Api.Integration.Tests;
 using Customer.Common;
-using Customer.Repository;
+using Customer.Common.Models.Customer;
 using FluentAssertions;
 
-namespace Customer.IntegrationTests;
+namespace Customer.Api.Integration.Tests;
 
-[TestFixture]
-public class CustomerApiTests
+public class CustomerApiTests : IClassFixture<CustomWebApplicationFactory>
 {
-    private CustomWebApplicationFactory _factory;
-    private HttpClient _client;
+    private readonly HttpClient _client;
 
-    [SetUp]
-    public void SetUp()
+    public CustomerApiTests(CustomWebApplicationFactory factory)
     {
-        _factory = new CustomWebApplicationFactory();
-        _client = _factory.CreateClient();
+        _client = factory.CreateClient();
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", TestJwtIssuer.AcmeEditor());
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        _client?.Dispose();
-        _factory?.Dispose();
-    }
-
-    [Test]
+    [Fact]
     public async Task AddCustomer_ShouldReturnCreatedCustomer()
     {
-        var customer = new CustomerEntity
+        var request = new CreateCustomerRequest
         {
-            Id = Guid.NewGuid(),
-            FirstName = "NUnit User",
-            Email = "nunit@example.com",
+            FirstName = "NUnit",
+            LastName = "User",
+            Email = $"nunit-{Guid.NewGuid():N}@acme.example",
             PhoneNumber = "1234567890"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/customers", customer);
+        var response = await _client.PostAsJsonAsync("/api/customers", request);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ApiResponseData<CustomerEntity>>();
-        result!.Data.FirstName.Should().Be("NUnit User");
+        var result = await response.Content.ReadFromJsonAsync<ApiResponseData<CustomerResponse>>();
+        result!.Data.FirstName.Should().Be("NUnit User".Split(' ')[0]);
+        result.Data.FirstName.Should().Be("NUnit");
+        result.Data.TenantId.Should().Be(Customer.Common.Tenancy.DemoTenants.AcmeBankId);
     }
 
-    [Test]
-    public async Task GetCustomer_ShouldReturnAllCustomers()
+    [Fact]
+    public async Task GetCustomer_ShouldReturnTenantCustomers()
     {
-        // Add a customer first
-        var customer = new CustomerEntity
+        var request = new CreateCustomerRequest
         {
-            Id = Guid.NewGuid(),
-            FirstName = "Test Fetch",
-            Email = "fetch@example.com",
+            FirstName = "Test",
+            LastName = "Fetch",
+            Email = $"fetch-{Guid.NewGuid():N}@acme.example",
             PhoneNumber = "5555555555"
         };
 
-        await _client.PostAsJsonAsync("/api/customers", customer);
+        await _client.PostAsJsonAsync("/api/customers", request);
 
         var response = await _client.GetAsync("/api/customers");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ApiResponseData<IEnumerable<CustomerEntity>>>();
-        result!.Data.Should().Contain(c => c.Email == "fetch@example.com");
+        var result = await response.Content.ReadFromJsonAsync<ApiResponseData<IEnumerable<CustomerResponse>>>();
+        result!.Data.Should().Contain(customer => customer.Email == request.Email);
     }
 
-    [Test]
+    [Fact]
     public async Task DeleteCustomer_ShouldReturnTrue()
     {
-        var customer = new CustomerEntity
+        var request = new CreateCustomerRequest
         {
-            Id = Guid.NewGuid(),
-            FirstName = "To Delete",
-            Email = "delete@x.com",
+            FirstName = "To",
+            LastName = "Delete",
+            Email = $"delete-{Guid.NewGuid():N}@acme.example",
             PhoneNumber = "9999999999"
         };
 
-        await _client.PostAsJsonAsync("/api/customers", customer);
+        var createResponse = await _client.PostAsJsonAsync("/api/customers", request);
+        var created = await createResponse.Content.ReadFromJsonAsync<ApiResponseData<CustomerResponse>>();
 
-        var response = await _client.DeleteAsync($"/api/customers/{customer.Id}");
+        var response = await _client.DeleteAsync($"/api/customers/{created!.Data.Id}");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<ApiResponseData<bool>>();

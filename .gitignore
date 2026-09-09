@@ -426,3 +426,13 @@ Customer.Api/obj/Debug/net8.0/refint/Customer.Api.dll
 bin
 obj
 
+# Local secrets and certificates — never commit these
+.env
+.env.local
+*.pem
+*.key
+*.p12
+*.pfx
+appsettings.*.local.json
+secrets.json
+

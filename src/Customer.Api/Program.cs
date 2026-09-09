@@ -1,5 +1,7 @@
-using System.IO.Compression;
-using Microsoft.AspNetCore.ResponseCompression;
+using Customer.Api.Authentication;
+using Customer.Api.Extensions;
+using Customer.Api.Logging;
+using Customer.Common.Identity;
 using Customer.Repository;
 using Customer.Repository.Interface;
 using Customer.Service;
@@ -8,55 +10,48 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
-
-// 👇 Register Swagger services
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Add AWS Lambda support. When application is run in Lambda Kestrel is swapped out as the web server with Amazon.Lambda.AspNetCoreServer. This
-// package will act as the webserver translating request and responses between the Lambda event source and ASP.NET Core.
+builder.Services.AddProblemDetails();
+builder.Services.AddCustomerSwagger(builder.Configuration);
+builder.Services.AddCustomerAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
-//Service
 builder.Services.AddScoped<ICustomerService, CustomerService>();
-
-//Repository
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<TenantContext>();
+builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+builder.Services.AddScoped<ApplicationIdentity>();
+builder.Services.AddScoped<IApplicationIdentity>(sp => sp.GetRequiredService<ApplicationIdentity>());
+builder.Services.AddSingleton<KeycloakOrganizationClaimParser>();
+builder.Services.AddSingleton<KeycloakRoleNormalizer>();
 
-//Automapper
-builder.Services.AddAutoMapper(typeof(CustomerMappingProfile));
-
-//DB Registration
 builder.Services.AddDbContext<CustomerDbContext>(options =>
     options.UseInMemoryDatabase("CustomerDb"));
 
-//Response Compression
-builder.Services.AddResponseCompression(options =>
-{
-    options.EnableForHttps = true;
-    options.Providers.Add<GzipCompressionProvider>();
-});
-builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Optimal;
-});
-
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-app.UseCors();
-app.UseAuthorization();
-app.MapControllers();
-
-
-if (app.Environment.IsDevelopment() || true) // enable always for testing
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var dbContext = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+    await CustomerDataSeeder.SeedAsync(dbContext);
 }
 
-app.MapGet("/", () => "Hello From Yash!");
+app.UseCustomerExceptionHandling();
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseMiddleware<IdentityResolutionMiddleware>();
+app.UseAuthorization();
+app.UseMiddleware<RequestLoggingMiddleware>();
+
+if (!app.Environment.IsProduction())
+{
+    app.UseCustomerSwagger();
+}
+
+app.MapControllers();
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
+
+public partial class Program;

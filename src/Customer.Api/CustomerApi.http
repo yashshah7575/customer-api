@@ -1,6 +1,9 @@
-@HelloApi_HostAddress = http://localhost:5010
+@HostAddress = http://localhost:5080
 
-GET {{HelloApi_HostAddress}}/
+GET {{HostAddress}}/api/system/ping
 Accept: application/json
 
 ###
+
+GET {{HostAddress}}/api/me
+Authorization: Bearer {{token}}
